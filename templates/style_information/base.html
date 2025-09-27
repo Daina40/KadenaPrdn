@@ -1,0 +1,89 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Kadena Sportware Ltd.{% endblock %}</title>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" 
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" 
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'assets/css/summary_styleinfo.css' %}">
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+    <!-- Navbar -->
+    <nav class="navbar bg-gray-500 p-0">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <img src="{% static 'assets/images/kn.png' %}" alt="Kadena logo">
+            </a>
+            <form class="d-flex">
+                <a class="nav-link" href="#">
+                    <i class="bi bi-person me-2" style="font-size: 2rem; color: white;"></i>
+                </a>
+            </form>
+        </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="page-wrapper d-flex flex-grow-1">
+        <!-- Sidebar -->
+        <div class="bg-light border-end sidebar" style="width: 200px;">
+            <div class="p-3">
+                <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" style="font-weight: 500;" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-calendar me-2"></i>Style Overview
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url "style_info_add" %}">Adding Style</a></li>
+                            <li><a class="dropdown-item" href="{% url "add_style_overview" %}">Adding Style Overview</a></li>
+                            <li><a class="dropdown-item" href="{% url "style_summary" %}">Summary of Style</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" style="font-weight: 500;" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
+                            <i class="fa-solid fa-users me-2"></i>Web User
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">User</a></li>
+                            <li><a class="dropdown-item" href="#">User Role</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content flex-grow-1">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <section id="footer-bottom" class="mt-auto bg-gray-200 text-center p-1">
+        <div class="container">
+            <div class="copy-right">
+                <p class="text-sm mb-2 sm:mb-0">
+                    Copyright © 2025. All rights reserved by
+                    <a href="#">Kadena Sportwear Ltd.</a>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

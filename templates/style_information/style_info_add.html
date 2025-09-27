@@ -1,0 +1,89 @@
+{% extends 'style_information/base.html' %}
+{% block title %}Style Information Add{% endblock %}
+{% block content %}
+    <div class="mt-2 mb-1 w-full px-[300px]">
+        <h1 class="text-2xl text-green-500 font-bold mb-6 text-center">Add Style Information</h1>
+        <form action="{% url 'style_info_add' %}" method="post" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% csrf_token %}
+            <!-- customer -->
+            <div>
+                <label for="customer_name" class="block font-medium">Customer Name:</label>
+                <input type="text" name="customer_name" value="{{ customer_name }}" 
+                    class="w-full p-2 border rounded uppercase"
+                    style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" required>
+            </div>
+
+            <!-- season -->
+            <div>
+                <label for="season" class="block font-medium">Season:</label>
+                <input type="text" name="season" value="{{ season }}" 
+                    class="w-full p-2 border rounded uppercase"
+                    style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" required>
+            </div>
+
+            <!-- style -->
+            <div>
+                <label for="style_no" class="block font-medium">Style:</label>
+                <input type="text" name="style_no" value="{{ style_no }}" 
+                    class="w-full p-2 border rounded uppercase"
+                    style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" required>
+            </div>
+
+            <!-- production line -->
+            <div>
+                <label for="production_line" class="block font-medium">Production Line:</label>
+                <input type="text" name="production_line" value="{{ production_line }}" 
+                    class="w-full p-2 border rounded uppercase"
+                    style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase();" required>
+            </div>
+
+            <!-- APM -->
+            <div>
+                <label for="apm" class="block font-medium">APM:</label>
+                <input type="text" name="apm" value="{{ apm }}" 
+                    class="w-full p-2 border rounded capitalize"
+                    style="text-transform: capitalize;" oninput="this.value = this.value.toCapitalized();" required>
+            </div>
+
+            <!-- Technician -->
+            <div>
+                <label for="technician" class="block font-medium">Technician:</label>
+                <input type="text" name="technician" value="{{ technician }}" 
+                    class="w-full p-2 border rounded capitalize"
+                    style="text-transform: capitalize;" oninput="this.value = this.value.toCapitalized();" required>
+            </div>
+
+            <!-- QC -->
+            <div>
+                <label for="qc" class="block font-medium">QC:</label>
+                <input type="text" name="qc" value="{{ qc }}" 
+                    class="w-full p-2 border rounded capitalize"
+                    style="text-transform: capitalize;" oninput="this.value = this.value.toCapitalized();" required>
+            </div>
+
+            <!-- QA -->
+            <div>
+                <label for="qa" class="block font-medium">QA:</label>
+                <input type="text" name="qa" value="{{ qa }}" 
+                    class="w-full p-2 border rounded capitalize"
+                    style="text-transform: capitalize;" oninput="this.value = this.value.toCapitalized();" required>
+            </div>
+
+            <!-- TQS -->
+            <div>
+                <label for="tqs" class="block font-medium">TQS:</label>
+                <input type="text" name="tqs" value="{{ tqs }}" 
+                    class="w-full p-2 border rounded capitalize"
+                    style="text-transform: capitalize;" oninput="this.value = this.value.toCapitalized();" required>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="col-span-2 flex justify-center mt-4 mb-8">
+                <button type="submit" 
+                        class="bg-green-500 text-white font-bold py-2 px-6 rounded hover:bg-green-700">
+                    Submit
+                </button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

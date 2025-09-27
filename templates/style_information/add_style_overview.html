@@ -1,0 +1,63 @@
+{% extends 'style_information/base.html' %}
+{% block title %}Summary of Style Information{% endblock %}
+
+{% block content %}
+<div class="mt-2 mb-1 w-full px-1">
+    <h1 class="text-2xl text-green-500 font-bold mb-6 text-center">
+        Add Style Overview
+    </h1>
+    <div class="overflow-x-auto">
+        <table class="min-w-full table-auto border border-black text-sm w-full text-center">
+            <thead class="bg-gray-200">
+                <tr>
+                    <th class="border p-1">Customer</th>
+                    <th class="border p-1">Season</th>
+                    <th class="border p-1">Style</th>
+                    <th class="border p-1">Production Line</th>
+                    <th class="border p-1">APM</th>
+                    <th class="border p-1">Technician</th>
+                    <th class="border p-1">QC</th>
+                    <th class="border p-1">QA</th>
+                    <th class="border p-1">TQS</th>
+                    <th class="border p-1 w-[50px]">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if styles %}
+                    {% for style in styles %}
+                        <tr>
+                            <td class="border p-1">{{ style.customer.customer_name }}</td>
+                            <td class="border p-1">{{ style.season }}</td>
+                            <td class="border p-1">{{ style.style_no }}</td>
+                            <td class="border p-1">{{ style.production_line }}</td>
+                            <td class="border p-1">{{ style.apm }}</td>
+                            <td class="border p-1">{{ style.technician }}</td>
+                            <td class="border p-1">{{ style.qc }}</td>
+                            <td class="border p-1">{{ style.qa }}</td>
+                            <td class="border p-1">{{ style.tqs }}</td>
+                            <td class="border p-1">
+                                <div class="flex justify-between">
+                                    <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                        <i class="fa-regular fa-pen-to-square"></i>
+                                    </a>
+                                    <a href="{% url "delete_add_style_overview" style.id %}" 
+                                        class="bg-red-600 text-white px-2 py-1 rounded"
+                                        onclick="return confirm('Are you sure you want to delete this entry?');">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="13" class="border p-2 text-center text-red-600 font-bold">
+                            No data available
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
