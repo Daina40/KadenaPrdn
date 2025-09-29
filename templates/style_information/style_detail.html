@@ -1,0 +1,11 @@
+{% extends 'style_information/base.html' %}
+{% block title %}Style Detail{% endblock %}
+
+{% block content %}
+<h1>{{ style.style_no }} - {{ style.customer.customer_name }}</h1>
+<ul>
+    {% for desc in descriptions %}
+        <li>{{ desc.style_description }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

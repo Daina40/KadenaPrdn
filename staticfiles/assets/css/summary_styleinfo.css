@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Gabarito:wght@400..900&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
+.dummy {
+    font-family: "Gabarito", sans-serif;
+    font-family: "Nunito Sans", sans-serif;
+    font-family: "Fira Code", monospace;
+}
+
+/* ===================================
+footer bottom part start
+=================================== */
+html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    height: 56px;
+}
+
+.page-wrapper {
+    flex: 1;
+    display: flex;
+    margin-top: 56px; /* push content below navbar */
+}
+
+/* Sidebar - stick to left */
+.sidebar {
+    position: fixed;
+    top: 56px; /* below navbar */
+    bottom: 40px; /* above footer */
+    left: 0;
+    width: 200px;
+    background: #f8f9fa;
+    border-right: 1px solid #dee2e6;
+    overflow-y: auto;
+}
+
+.content {
+    flex: 1;
+    margin-left: 200px; /* leave space for sidebar */
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+/* Footer styles */
+#footer-bottom {
+    margin-top: 300px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: #353535;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1030;
+}
+
+#footer-bottom .copy-right {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#footer-bottom .copy-right p {
+    font-size: 14px;
+    color: #fff;
+    padding: 15px 0;
+    margin: 0;
+}
+
+#footer-bottom .copy-right p a {
+    color: #fec600 !important;
+}
+
+
+/* ===================================
+footer bottom part end
+=================================== */

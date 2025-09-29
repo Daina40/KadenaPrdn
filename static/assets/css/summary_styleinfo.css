@@ -87,3 +87,19 @@ html, body {
 /* ===================================
 footer bottom part end
 =================================== */
+
+
+.style-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 50;
+    min-width: 200px;
+}
+.style-dropdown.show {
+    display: block;
+}
+.style-dropdown div {
+    padding: 8px;
+    cursor: pointer;
+}

@@ -8,7 +8,7 @@ SECRET_KEY = 'django-insecure-2t7z4mukf@8ubwh_xyb8v7p^a%ui981umoaiglc1v&vyhmdj*^
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1','kadena.pythonanywhere.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1','kadenaprdn.pythonanywhere.com']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -111,7 +111,7 @@ USE_TZ = True
 LOGIN_URL = 'login'
 
 STATIC_URL = '/static/'
-
 STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

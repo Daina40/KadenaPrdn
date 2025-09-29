@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Customer, StyleInfo
+from .models import Customer, StyleInfo, StyleDescription
 
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -28,3 +28,8 @@ class StyleInfoSerializer(serializers.ModelSerializer):
             'comments',
             'created_at'
         ]
+
+class StyleDescriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StyleDescription
+        fields = ['id', 'style', 'description']
