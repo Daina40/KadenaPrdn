@@ -10,57 +10,29 @@
         <table class="min-w-full table-auto border border-black text-sm w-full text-center">
             <thead class="bg-gray-200">
                 <tr>
-                    <th class="border p-1">
+                    <th class="border p-1 relative">
                         Customer
                         <span class="dropdown-icon cursor-pointer ml-2 text-blue-500">
                             <i class="fa-regular fa-square-caret-down"></i>
                         </span>
+                        <input type="text" class="filter-input absolute top-full left-0 hidden border p-1 w-full" placeholder="Search...">
                     </th>
-                    
-                    <th class="border p-1">
+
+                    <th class="border p-1 relative">
                         Style
                         <span class="dropdown-icon cursor-pointer ml-2 text-blue-500">
                             <i class="fa-regular fa-square-caret-down"></i>
                         </span>
+                        <input type="text" class="filter-input absolute top-full left-0 hidden border p-1 w-full" placeholder="Search...">
                     </th>
 
-                    <th class="border p-1">
-                        Season
-                        <span class="dropdown-icon cursor-pointer ml-2 text-blue-500">
-                            <i class="fa-regular fa-square-caret-down"></i>
-                        </span>
-                    </th>
-
-                    <th class="border p-1">Production Line
-                        <span class="dropdown-icon cursor-pointer ml-2 text-blue-500">
-                            <i class="fa-regular fa-square-caret-down"></i>
-                        </span>
-                    </th>
-                    <th class="border p-1">APM
-                        <span class="dropdown-icon cursor-pointer ml-2 text-blue-500">
-                            <i class="fa-regular fa-square-caret-down"></i>
-                        </span>
-                    </th>
-                    <th class="border p-1">Technician
-                        <span class="dropdown-icon cursor-pointer ml-2 text-blue-500">
-                            <i class="fa-regular fa-square-caret-down"></i>
-                        </span>
-                    </th>
-                    <th class="border p-1">QC
-                        <span class="dropdown-icon cursor-pointer ml-2 text-blue-500">
-                            <i class="fa-regular fa-square-caret-down"></i>
-                        </span>
-                    </th>
-                    <th class="border p-1">QA
-                        <span class="dropdown-icon cursor-pointer ml-2 text-blue-500">
-                            <i class="fa-regular fa-square-caret-down"></i>
-                        </span>
-                    </th>
-                    <th class="border p-1">TQS
-                        <span class="dropdown-icon cursor-pointer ml-2 text-blue-500">
-                            <i class="fa-regular fa-square-caret-down"></i>
-                        </span>
-                    </th>
+                    <th class="border p-1">Season</th>
+                    <th class="border p-1">Production Line</th>
+                    <th class="border p-1">APM</th>
+                    <th class="border p-1">Technician</th>
+                    <th class="border p-1">QC</th>
+                    <th class="border p-1">QA</th>
+                    <th class="border p-1">TQS</th>
                     <th class="border p-1 w-[50px]">Action</th>
                 </tr>
             </thead>
@@ -68,12 +40,9 @@
                 {% if styles %}
                     {% for item in styles %}
                         {% for row in item.rows %}
-                            <tr>
+                            <tr data-group="{{ item.customer }}-{{ item.style_no }}">
                                 {% if forloop.first %}
-                                    <!-- Customer (merged) -->
                                     <td class="border p-1" rowspan="{{ item.rowspan }}">{{ item.customer }}</td>
-
-                                    <!-- Style (merged with dropdown) -->
                                     <td class="border px-2 py-1 relative" rowspan="{{ item.rowspan }}">
                                         <div class="style-cell cursor-pointer text-blue-600 relative">
                                             {{ item.style_no }}
@@ -95,8 +64,6 @@
                                         </div>
                                     </td>
                                 {% endif %}
-
-                                <!-- The varying fields (per row) -->
                                 <td class="border p-1">{{ row.season }}</td>
                                 <td class="border p-1">{{ row.production_line }}</td>
                                 <td class="border p-1">{{ row.apm }}</td>
@@ -131,167 +98,125 @@
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const table = document.querySelector("table");
+document.addEventListener("DOMContentLoaded", function () {
+    const table = document.querySelector("table");
 
-        // track active dropdown so we can restore it later
-        let active = { el: null, parent: null, nextSibling: null };
+    // --- Dropdown logic ---
+    let active = { el: null, parent: null, nextSibling: null };
+    function closeActive() {
+        if (!active.el) return;
+        active.el.classList.add('hidden');
+        if (active.parent) active.parent.insertBefore(active.el, active.nextSibling || null);
+        active = { el: null, parent: null, nextSibling: null };
+    }
+    function showDropdown(cell, dropdown) {
+        closeActive();
+        active.parent = dropdown.parentNode;
+        active.nextSibling = dropdown.nextElementSibling;
+        active.el = dropdown;
+        document.body.appendChild(dropdown);
+        dropdown.classList.remove('hidden');
+        dropdown.style.position = 'absolute';
+        dropdown.style.zIndex = '9999';
+        dropdown.style.maxHeight = '200px';
+        dropdown.style.overflowY = 'auto';
+        const rect = cell.getBoundingClientRect();
+        dropdown.style.minWidth = Math.max(cell.offsetWidth, 250) + 'px';
+        dropdown.style.left = rect.left + window.scrollX + 'px';
+        dropdown.style.top = rect.bottom + window.scrollY + 'px';
 
-        function closeActive() {
-            if (!active.el) return;
-            // hide & reset styles
-            active.el.classList.add('hidden');
-            active.el.style.position = '';
-            active.el.style.left = '';
-            active.el.style.top = '';
-            active.el.style.minWidth = '';
-            active.el.style.maxHeight = '';
-            active.el.style.overflowY = '';
-            active.el.style.boxSizing = '';
-            active.el.style.zIndex = '';
-            active.el.style.visibility = '';
-
-            // move back to original place
-            if (active.parent) {
-            active.parent.insertBefore(active.el, active.nextSibling || null);
-            }
-            active = { el: null, parent: null, nextSibling: null };
-        }
-
-        function showDropdown(cell, dropdown) {
-            // close other
-            closeActive();
-
-            // save original location
-            active.parent = dropdown.parentNode;
-            active.nextSibling = dropdown.nextElementSibling;
-            active.el = dropdown;
-
-            // move dropdown to body (so it won't affect table layout)
-            document.body.appendChild(dropdown);
-
-            // prepare styles
-            dropdown.classList.remove('hidden');
-            dropdown.style.position = 'absolute';
-            dropdown.style.boxSizing = 'border-box';
-            dropdown.style.visibility = 'hidden'; // hide while we measure/position
-            dropdown.style.maxHeight = '200px';
-            dropdown.style.overflowY = 'auto';
-            dropdown.style.zIndex = '9999';
-
-            // calculate width (keep it within viewport)
-            const rect = cell.getBoundingClientRect();
-            const desiredWidth = Math.max(cell.offsetWidth, 250);
-            const maxAllowed = window.innerWidth - 20; // 10px padding each side
-            const width = Math.min(desiredWidth, maxAllowed);
-            dropdown.style.minWidth = width + 'px';
-
-            // force reflow to ensure offsetHeight is available
-            void dropdown.offsetHeight;
-
-            // calculate left (keep inside viewport)
-            let left = rect.left + window.scrollX;
-            if (left + width > window.scrollX + window.innerWidth - 10) {
-            left = window.scrollX + window.innerWidth - width - 10;
-            }
-            if (left < window.scrollX + 10) left = window.scrollX + 10;
-
-            // compute vertical position (open below or above if not enough space)
-            const spaceBelow = window.innerHeight - rect.bottom;
-            const maxH = 200; // same as maxHeight
-            let top;
-            if (spaceBelow < maxH + 10 && rect.top > maxH + 10) {
-            // open above the cell
-            top = rect.top + window.scrollY - Math.min(dropdown.offsetHeight || maxH, maxH);
-            } else {
-            // open below
-            top = rect.bottom + window.scrollY;
-            }
-
-            dropdown.style.left = left + 'px';
-            dropdown.style.top = top + 'px';
-            dropdown.style.visibility = ''; // now visible
-
-            // bind description search only once per element
-            const searchInput = dropdown.querySelector('.desc-search');
-            if (searchInput && !searchInput.dataset.bound) {
+        const searchInput = dropdown.querySelector('.desc-search');
+        if (searchInput && !searchInput.dataset.bound) {
             searchInput.dataset.bound = '1';
             searchInput.addEventListener('input', function () {
                 const filter = this.value.toLowerCase();
                 const items = dropdown.querySelectorAll('.dropdown-item');
                 items.forEach(item => {
-                item.style.display = item.innerText.toLowerCase().includes(filter) ? '' : 'none';
+                    item.style.display = item.innerText.toLowerCase().includes(filter) ? '' : 'none';
                 });
             });
-            }
         }
-
-        // attach click to style cells
-        document.querySelectorAll('.style-cell').forEach(cell => {
-            cell.addEventListener('click', function (e) {
+    }
+    document.querySelectorAll('.style-cell').forEach(cell => {
+        cell.addEventListener('click', function (e) {
             e.stopPropagation();
             const dropdown = cell.querySelector('.style-dropdown');
             if (!dropdown) return;
-            // toggle if same
-            if (active.el === dropdown) {
-                closeActive();
-                return;
-            }
+            if (active.el === dropdown) { closeActive(); return; }
             showDropdown(cell, dropdown);
-            });
-        });
-
-        // close on outside click, restore dropdown into table
-        document.addEventListener('click', function (e) {
-            // allow clicks inside active dropdown
-            if (active.el && active.el.contains(e.target)) return;
-            closeActive();
-        });
-
-        // close on scroll/resize so position doesn't get stale
-        window.addEventListener('scroll', () => { if (active.el) closeActive(); });
-        window.addEventListener('resize', () => { if (active.el) closeActive(); });
-
-        // --- Column filter dropdown code (same as before) ---
-        const dropdownIcons = document.querySelectorAll(".dropdown-icon");
-        dropdownIcons.forEach((icon, colIndex) => {
-            icon.addEventListener("click", function (event) {
-            event.stopPropagation();
-
-            let existingInput = icon.parentNode.querySelector("input");
-            if (existingInput) {
-                existingInput.remove();
-                return;
-            }
-
-            let input = document.createElement("input");
-            input.type = "text";
-            input.placeholder = "Search...";
-            input.classList.add("border", "p-1", "mt-1", "w-full");
-
-            icon.parentNode.appendChild(input);
-
-            input.addEventListener("keyup", function () {
-                let filter = input.value.toLowerCase();
-                let rows = table.querySelectorAll("tbody tr");
-
-                rows.forEach(row => {
-                // note: rows include both style rows and (if any) expanded rows, so ensure you target only main rows if you add extra rows
-                let cellText = row.cells[colIndex]?.innerText?.toLowerCase() || "";
-                row.style.display = cellText.includes(filter) ? "" : "none";
-                });
-            });
-            });
-        });
-        
-        document.body.addEventListener('click', function(e) {
-            const item = e.target.closest('.dropdown-item');
-            if (!item) return;
-            const url = item.getAttribute('data-url');
-            if (url) window.location.href = url;
         });
     });
+    document.addEventListener('click', e => { if (active.el && !active.el.contains(e.target)) closeActive(); });
+
+    // --- Filter function ---
+    function filterTable() {
+        const rows = Array.from(table.querySelectorAll("tbody tr"));
+        const groups = {};
+        rows.forEach(row => {
+            const key = row.getAttribute("data-group");
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(row);
+        });
+
+        const inputs = Array.from(document.querySelectorAll("thead .filter-input"));
+        const filters = inputs.map(input => input.value.toLowerCase().trim());
+
+        Object.values(groups).forEach(groupRows => {
+            let groupMatch = true;
+            filters.forEach((filter, colIdx) => {
+                if (!filter) return;
+                let colMatch = false;
+                groupRows.forEach((row, idx) => {
+                    let cellText = "";
+                    if (colIdx === 0) {
+                        const customerCell = row.querySelector("td[rowspan]");
+                        if (customerCell) cellText = customerCell.innerText.toLowerCase().trim();
+                    } else if (colIdx === 1) {
+                        const styleCell = groupRows[0].querySelector(".style-cell");
+                        if (styleCell) cellText = styleCell.innerText.toLowerCase().trim();
+                    } else {
+                        const offset = colIdx - 2;
+                        const normalCells = row.querySelectorAll("td:not([rowspan])");
+                        if (normalCells[offset]) cellText = normalCells[offset].innerText.toLowerCase().trim();
+                    }
+                    if (cellText.includes(filter)) colMatch = true;
+                });
+                if (!colMatch) groupMatch = false;
+            });
+
+            groupRows.forEach((row, idx) => {
+                row.style.display = groupMatch ? "" : "none";
+                row.querySelectorAll("[rowspan]").forEach(cell => {
+                    cell.style.display = (idx === 0 && groupMatch) ? "" : "none";
+                });
+            });
+        });
+    }
+
+    // --- Toggle filter inputs on icon click ---
+    const dropdownIcons = document.querySelectorAll(".dropdown-icon");
+    dropdownIcons.forEach(icon => {
+        icon.addEventListener("click", function(e) {
+            e.stopPropagation();
+            const input = icon.parentNode.querySelector(".filter-input");
+            if (!input) return;
+            input.classList.toggle("hidden");
+            if (!input.classList.contains("hidden")) input.focus();
+        });
+    });
+
+    // --- Attach keyup to all filter inputs ---
+    document.querySelectorAll('.filter-input').forEach(input => {
+        input.addEventListener('keyup', filterTable);
+    });
+
+    // --- Handle style description clicks ---
+    document.body.addEventListener('click', function(e) {
+        const item = e.target.closest('.dropdown-item');
+        if (!item) return;
+        const url = item.getAttribute('data-url');
+        if (url) window.location.href = url;
+    });
+});
 </script>
-
-
 {% endblock %}
