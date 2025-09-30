@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from Style_Information_app.models import Customer, StyleInfo, StyleDescription
 from collections import defaultdict
+
 def style_info_add(request):
     if request.method == "POST":
         customer_name = request.POST.get("customer_name", "").upper()
@@ -41,10 +42,21 @@ def style_info_add(request):
 def add_style_overview(request):
     styles = StyleInfo.objects.prefetch_related("descriptions").all()
 
-    grouped = defaultdict(lambda: {"rows": [], "descriptions": {}})  
+    # First group by customer
+    customer_grouped = defaultdict(lambda: {"styles": {}, "rowspan": 0})
 
     for s in styles:
-        key = (s.customer.customer_name, s.style_no)
+        cust = s.customer.customer_name
+        style_no = s.style_no
+
+        # group by style inside each customer
+        if style_no not in customer_grouped[cust]["styles"]:
+            customer_grouped[cust]["styles"][style_no] = {
+                "rows": [],
+                "descriptions": {},
+            }
+
+        # deduplicate rows
         row_key = (
             s.season,
             s.production_line,
@@ -54,36 +66,45 @@ def add_style_overview(request):
             s.qa,
             s.tqs,
         )
+        if row_key not in [
+            (
+                r.season,
+                r.production_line,
+                r.apm,
+                r.technician,
+                r.qc,
+                r.qa,
+                r.tqs,
+            )
+            for r in customer_grouped[cust]["styles"][style_no]["rows"]
+        ]:
+            customer_grouped[cust]["styles"][style_no]["rows"].append(s)
+            customer_grouped[cust]["rowspan"] += 1  # increase total rowspan for customer
 
-        if row_key not in [(
-            r.season,
-            r.production_line,
-            r.apm,
-            r.technician,
-            r.qc,
-            r.qa,
-            r.tqs
-        ) 
-
-        for r in grouped[key]["rows"]]:
-            grouped[key]["rows"].append(s)
-
+        # collect distinct descriptions
         for d in s.descriptions.all():
-            if d.style_description not in grouped[key]["descriptions"]:
-                grouped[key]["descriptions"][d.style_description] = d
+            if d.style_description not in customer_grouped[cust]["styles"][style_no]["descriptions"]:
+                customer_grouped[cust]["styles"][style_no]["descriptions"][d.style_description] = d
 
-    merged_styles = []
-    for (customer, style_no), data in grouped.items():
-        merged_styles.append({
+    # Prepare for template
+    merged_customers = []
+    for customer, cdata in customer_grouped.items():
+        styles_list = []
+        for style_no, sdata in cdata["styles"].items():
+            styles_list.append({
+                "style_no": style_no,
+                "rows": sdata["rows"],
+                "descriptions": list(sdata["descriptions"].values()),
+                "rowspan": len(sdata["rows"]),
+            })
+        merged_customers.append({
             "customer": customer,
-            "style_no": style_no,
-            "rows": data["rows"],
-            "descriptions": list(data["descriptions"].values()),  # distinct objects
-            "rowspan": len(data["rows"]),
+            "styles": styles_list,
+            "rowspan": cdata["rowspan"],
         })
 
     return render(request, "style_information/add_style_overview.html", {
-        "styles": merged_styles
+        "customers": merged_customers
     })
 
 # Delete StyleInfo
@@ -92,11 +113,13 @@ def delete_add_style_overview(request, id):
     style.delete()
     return redirect('add_style_overview')
 
-# after click the style description show this page
 def style_detail(request, style_id):
-    styles = StyleInfo.objects.all()   # ✅ full model name
-
-    # Extract unique values for dropdowns
+    style = get_object_or_404(StyleInfo, id=style_id)
+    
+    description = style.descriptions.first()
+    
+    # All distinct values for filters or dropdowns
+    styles = StyleInfo.objects.all()
     customers = styles.values_list("customer__customer_name", flat=True).distinct()
     seasons = styles.values_list("season", flat=True).distinct()
     lines = styles.values_list("production_line", flat=True).distinct()
@@ -108,6 +131,8 @@ def style_detail(request, style_id):
     style_nos = styles.values_list("style_no", flat=True).distinct()
 
     context = {
+        "style": style,
+        "description": description,
         "customers": customers,
         "seasons": seasons,
         "lines": lines,
@@ -117,10 +142,55 @@ def style_detail(request, style_id):
         "qas": qas,
         "tqss": tqss,
         "style_nos": style_nos,
-        'style': styles,
-        'style_id': style_id,
     }
-    return render(request, 'style_information/style_detail.html', context)
+    return render(request, "style_information/style_detail.html", context)
+
+
+def style_saved_table(request, saved_id=None):
+    styles = StyleInfo.objects.prefetch_related("descriptions", "customer").all()
+
+    if saved_id:
+        styles = styles.filter(id=saved_id)
+
+    # Group by customer → then by style
+    customer_grouped = defaultdict(lambda: {"styles": {}, "rowspan": 0})
+
+    for s in styles:
+        cust_name = s.customer.customer_name
+        style_no = s.style_no
+
+        # Attach first description to the StyleInfo instance
+        s.first_description = s.descriptions.first()
+
+        if style_no not in customer_grouped[cust_name]["styles"]:
+            customer_grouped[cust_name]["styles"][style_no] = {
+                "rows": [],
+            }
+
+        # Add the row
+        customer_grouped[cust_name]["styles"][style_no]["rows"].append(s)
+        customer_grouped[cust_name]["rowspan"] += 1
+
+    # Prepare data for template
+    merged_customers = []
+    for customer, cdata in customer_grouped.items():
+        styles_list = []
+        for style_no, sdata in cdata["styles"].items():
+            styles_list.append({
+                "style_no": style_no,
+                "rows": sdata["rows"],
+                "rowspan": len(sdata["rows"]),
+            })
+        merged_customers.append({
+            "customer": customer,
+            "styles": styles_list,
+            "rowspan": cdata["rowspan"],
+        })
+
+    return render(request, "style_information/style_saved_table.html", {
+        "customers": merged_customers
+    })
+
 
 def style_summary(request):
     styles = StyleInfo.objects.all()   # ✅ full model name

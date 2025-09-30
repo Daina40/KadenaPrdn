@@ -7,9 +7,9 @@
         Add Style Overview
     </h1>
     <div class="overflow-x-auto">
-        <table class="min-w-full table-auto border border-black text-sm w-full text-center">
-            <thead class="bg-gray-200">
-                <tr>
+        <table class="min-w-full table-auto border border-black text-sm w-full mb-[100px]">
+            <thead class="bg-gray-300">
+                <tr class="border p-1 text-center">
                     <th class="border p-1 relative">
                         Customer
                         <span class="dropdown-icon cursor-pointer ml-2 text-blue-500">
@@ -37,52 +37,56 @@
                 </tr>
             </thead>
             <tbody>
-                {% if styles %}
-                    {% for item in styles %}
-                        {% for row in item.rows %}
-                            <tr data-group="{{ item.customer }}-{{ item.style_no }}">
-                                {% if forloop.first %}
-                                    <td class="border p-1" rowspan="{{ item.rowspan }}">{{ item.customer }}</td>
-                                    <td class="border px-2 py-1 relative" rowspan="{{ item.rowspan }}">
-                                        <div class="style-cell cursor-pointer text-blue-600 relative">
-                                            {{ item.style_no }}
-                                            <span class="search-icon ml-2 text-yellow-500">
-                                                <i class="fa-solid fa-folder-tree"></i>
-                                            </span>
-                                            <div class="style-dropdown hidden absolute left-0 top-[100%] bg-black text-white border shadow-md min-w-[250px] z-[9999] max-h-[200px] overflow-y-auto">
-                                                <input type="text" placeholder="Search description..." class="desc-search text-black border p-1 w-full mb-1">
-                                                {% if item.descriptions %}
-                                                    {% for desc in item.descriptions %}
-                                                        <div class="dropdown-item px-2 py-1 hover:bg-gray-200 cursor-pointer" data-url="{% url 'style_detail' desc.id %}">
-                                                            {{ desc.style_description }}
-                                                        </div>
-                                                    {% endfor %}
-                                                {% else %}
-                                                    <div class="px-2 py-1 text-gray-400">No description</div>
-                                                {% endif %}
+                {% if customers %}
+                    {% for cust in customers %}
+                        {% for item in cust.styles %}
+                            {% for row in item.rows %}
+                                <tr>
+                                    {% if forloop.first and forloop.parentloop.first %}
+                                        <td class="border p-1" rowspan="{{ cust.rowspan }}">{{ cust.customer }}</td>
+                                    {% endif %}
+                                    {% if forloop.first %}
+                                        <td class="border px-2 py-1 relative" rowspan="{{ item.rowspan }}">
+                                            <div class="style-cell cursor-pointer text-blue-600 relative">
+                                                {{ item.style_no }}
+                                                <span class="search-icon ml-2 text-yellow-500">
+                                                    <i class="fa-solid fa-folder-tree"></i>
+                                                </span>
+                                                <div class="style-dropdown hidden absolute left-0 top-[100%] bg-black text-white border shadow-md min-w-[250px] z-[9999] max-h-[200px] overflow-y-auto">
+                                                    <input type="text" placeholder="Search description..." class="desc-search text-black border p-1 w-full mb-1">
+                                                    {% if item.descriptions %}
+                                                        {% for desc in item.descriptions %}
+                                                            <div class="dropdown-item px-2 py-1 hover:bg-gray-200 cursor-pointer" data-url="{% url 'style_detail' desc.id %}">
+                                                                {{ desc.style_description }}
+                                                            </div>
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        <div class="px-2 py-1 text-gray-400">No description</div>
+                                                    {% endif %}
+                                                </div>
                                             </div>
+                                        </td>
+                                    {% endif %}
+                                    <td class="border p-1">{{ row.season }}</td>
+                                    <td class="border p-1">{{ row.production_line }}</td>
+                                    <td class="border p-1">{{ row.apm }}</td>
+                                    <td class="border p-1">{{ row.technician }}</td>
+                                    <td class="border p-1">{{ row.qc }}</td>
+                                    <td class="border p-1">{{ row.qa }}</td>
+                                    <td class="border p-1">{{ row.tqs }}</td>
+                                    <td class="border p-1">
+                                        <div class="flex justify-between">
+                                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                                <i class="fa-regular fa-pen-to-square"></i>
+                                            </a>
+                                            <a href="{% url 'delete_add_style_overview' row.id %}" class="bg-red-600 text-white px-2 py-1 mr-1 rounded"
+                                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </a>
                                         </div>
                                     </td>
-                                {% endif %}
-                                <td class="border p-1">{{ row.season }}</td>
-                                <td class="border p-1">{{ row.production_line }}</td>
-                                <td class="border p-1">{{ row.apm }}</td>
-                                <td class="border p-1">{{ row.technician }}</td>
-                                <td class="border p-1">{{ row.qc }}</td>
-                                <td class="border p-1">{{ row.qa }}</td>
-                                <td class="border p-1">{{ row.tqs }}</td>
-                                <td class="border p-1">
-                                    <div class="flex justify-between">
-                                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                                            <i class="fa-regular fa-pen-to-square"></i>
-                                        </a>
-                                        <a href="{% url 'delete_add_style_overview' row.id %}" class="bg-red-600 text-white px-2 py-1 rounded"
-                                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                                            <i class="fa-solid fa-trash-can"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
+                                </tr>
+                            {% endfor %}
                         {% endfor %}
                     {% endfor %}
                 {% else %}
@@ -93,6 +97,7 @@
                     </tr>
                 {% endif %}
             </tbody>
+
         </table>
     </div>
 </div>
