@@ -35,16 +35,17 @@
                     </td>
                     <td class="label font-medium">Production Line:</td>
                     <td>
-                        <select class="form-select selectpicker" data-live-search="true">
+                        <select name="production_line" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
                             <option value="">Select Line</option>
                             {% for l in lines %}
                                 <option value="{{ l }}">{{ l }}</option>
                             {% endfor %}
                         </select>
                     </td>
+
                     <td class="label font-medium">Technician:</td>
                     <td>
-                        <select class="form-select selectpicker" data-live-search="true">
+                        <select class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
                             <option value="">Select Technician</option>
                             {% for t in technicians %}
                                 <option value="{{ t }}">{{ t }}</option>
@@ -55,7 +56,7 @@
                 <tr>
                     <td class="label font-medium">Season:</td>
                     <td>
-                        <select class="form-select selectpicker" data-live-search="true">
+                        <select class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
                             <option value="">Select Season</option>
                             {% for s in seasons %}
                                 <option value="{{ s }}">{{ s }}</option>
@@ -70,7 +71,7 @@
 
                     <td class="label font-medium">QC:</td>
                     <td>
-                        <select class="form-select selectpicker" data-live-search="true">
+                        <select class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
                             <option value="">Select QC</option>
                             {% for qc in qcs %}
                                 <option value="{{ qc }}">{{ qc }}</option>
@@ -85,7 +86,7 @@
                     </td>
                     <td class="label font-medium">APM:</td>
                     <td>
-                        <select class="form-select selectpicker" data-live-search="true">
+                        <select class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
                             <option>Select APM</option>
                             {% for apm in apms %}
                                 <option value="{{ apm }}">{{ apm }}</option>
@@ -94,7 +95,7 @@
                     </td>
                     <td class="label font-medium">QA:</td>
                     <td>
-                        <select class="form-select selectpicker" data-live-search="true">
+                        <select class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
                             <option>Select QA</option>
                             {% for qa in qas %}
                                 <option value="{{ qa }}">{{ qa }}</option>
@@ -110,7 +111,7 @@
 
                     <td class="label font-medium">TQS:</td>
                     <td>
-                        <select class="form-select selectpicker" data-live-search="true">
+                        <select class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
                             <option>Select TQS</option>
                             {% for tqs in tqss %}
                                 <option value="{{ tqs }}">{{ tqs }}</option>
@@ -679,4 +680,11 @@
         </div>
         </form>
     </div>
+
+    <script>
+        $(document).ready(function() {
+            $('.selectpicker').selectpicker();
+        });
+    </script>
+
 {% endblock %}

@@ -41,13 +41,13 @@
                     {% for cust in customers %}
                         {% for item in cust.styles %}
                             {% for row in item.rows %}
-                                <tr>
+                                <tr data-customer="{{ cust.customer }}" data-style="{{ item.style_no }}" data-group="{{ cust.customer }}||{{ item.style_no }}">
                                     {% if forloop.first and forloop.parentloop.first %}
                                         <td class="border p-1" rowspan="{{ cust.rowspan }}">{{ cust.customer }}</td>
                                     {% endif %}
                                     {% if forloop.first %}
                                         <td class="border px-2 py-1 relative" rowspan="{{ item.rowspan }}">
-                                            <div class="style-cell cursor-pointer text-blue-600 relative">
+                                            <div class="style-cell cursor-pointer text-blue-600 relative" data-style="{{ item.style_no }}">
                                                 {{ item.style_no }}
                                                 <span class="search-icon ml-2 text-yellow-500">
                                                     <i class="fa-solid fa-folder-tree"></i>
@@ -97,7 +97,6 @@
                     </tr>
                 {% endif %}
             </tbody>
-
         </table>
     </div>
 </div>
@@ -105,123 +104,179 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const table = document.querySelector("table");
+    const tbody = table.querySelector("tbody");
 
-    // --- Dropdown logic ---
-    let active = { el: null, parent: null, nextSibling: null };
+    const customerMap = new Map();
+    const styleMap = new Map();
+    const groups = {};
+
+    (function buildInitialMaps(){
+        const rows = Array.from(tbody.querySelectorAll("tr"));
+        rows.forEach(row => {
+            const cust = row.dataset.customer;
+            const style = row.dataset.style;
+            const groupKey = row.dataset.group;
+
+            if (!groups[groupKey]) groups[groupKey] = [];
+            groups[groupKey].push(row);
+
+            const rowspanTds = Array.from(row.querySelectorAll("td[rowspan]"));
+            if (rowspanTds.length) {
+                const custTd = rowspanTds.find(td => !td.querySelector('.style-cell'));
+                const styleTd = rowspanTds.find(td => td.querySelector('.style-cell'));
+                if (custTd && cust && !customerMap.has(cust)) {
+                    customerMap.set(cust, { td: custTd, originalRow: row });
+                }
+                if (styleTd && groupKey && !styleMap.has(groupKey)) {
+                    styleMap.set(groupKey, { td: styleTd, originalRow: row });
+                }
+            }
+        });
+    })();
+    // --- dropdown logic ---
+    let active = { clone: null, originalParent: null, nextSibling: null };
     function closeActive() {
-        if (!active.el) return;
-        active.el.classList.add('hidden');
-        if (active.parent) active.parent.insertBefore(active.el, active.nextSibling || null);
-        active = { el: null, parent: null, nextSibling: null };
+        if (!active.clone) return;
+        active.clone.remove();
+        active = { clone: null, originalParent: null, nextSibling: null };
     }
-    function showDropdown(cell, dropdown) {
+    function showDropdown(cell, originalDropdown) {
         closeActive();
-        active.parent = dropdown.parentNode;
-        active.nextSibling = dropdown.nextElementSibling;
-        active.el = dropdown;
-        document.body.appendChild(dropdown);
-        dropdown.classList.remove('hidden');
-        dropdown.style.position = 'absolute';
-        dropdown.style.zIndex = '9999';
-        dropdown.style.maxHeight = '200px';
-        dropdown.style.overflowY = 'auto';
+        const clone = originalDropdown.cloneNode(true);
+        clone.classList.remove('hidden');
+        clone.style.position = 'absolute';
+        clone.style.zIndex = '9999';
+        clone.style.maxHeight = '200px';
+        clone.style.overflowY = 'auto';
+        document.body.appendChild(clone);
         const rect = cell.getBoundingClientRect();
-        dropdown.style.minWidth = Math.max(cell.offsetWidth, 250) + 'px';
-        dropdown.style.left = rect.left + window.scrollX + 'px';
-        dropdown.style.top = rect.bottom + window.scrollY + 'px';
+        clone.style.left = (rect.left + window.scrollX) + 'px';
+        clone.style.top = (rect.bottom + window.scrollY) + 'px';
+        clone.style.minWidth = Math.max(cell.offsetWidth, 250) + 'px';
 
-        const searchInput = dropdown.querySelector('.desc-search');
-        if (searchInput && !searchInput.dataset.bound) {
-            searchInput.dataset.bound = '1';
+        const searchInput = clone.querySelector('.desc-search');
+        if (searchInput) {
             searchInput.addEventListener('input', function () {
                 const filter = this.value.toLowerCase();
-                const items = dropdown.querySelectorAll('.dropdown-item');
-                items.forEach(item => {
-                    item.style.display = item.innerText.toLowerCase().includes(filter) ? '' : 'none';
-                });
+                const items = clone.querySelectorAll('.dropdown-item');
+                items.forEach(item => item.style.display = item.innerText.toLowerCase().includes(filter) ? '' : 'none');
             });
         }
+
+        active.clone = clone;
     }
+
     document.querySelectorAll('.style-cell').forEach(cell => {
         cell.addEventListener('click', function (e) {
             e.stopPropagation();
             const dropdown = cell.querySelector('.style-dropdown');
             if (!dropdown) return;
-            if (active.el === dropdown) { closeActive(); return; }
+            if (active.clone) { closeActive(); return; }
             showDropdown(cell, dropdown);
         });
     });
-    document.addEventListener('click', e => { if (active.el && !active.el.contains(e.target)) closeActive(); });
-
-    // --- Filter function ---
+    document.addEventListener('click', function(e) {
+        if (active.clone && active.clone.contains(e.target)) return;
+        closeActive();
+    });
+    // --- filtering logic ---
     function filterTable() {
-        const rows = Array.from(table.querySelectorAll("tbody tr"));
-        const groups = {};
-        rows.forEach(row => {
-            const key = row.getAttribute("data-group");
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(row);
-        });
-
         const inputs = Array.from(document.querySelectorAll("thead .filter-input"));
-        const filters = inputs.map(input => input.value.toLowerCase().trim());
+        const filters = inputs.map(i => i.value.toLowerCase().trim());
 
-        Object.values(groups).forEach(groupRows => {
-            let groupMatch = true;
-            filters.forEach((filter, colIdx) => {
-                if (!filter) return;
+        const visibleGroupKeys = new Set();
+        for (const [groupKey, rows] of Object.entries(groups)) {
+            const [cust, style] = groupKey.split('||');
+
+            let ok = true;
+            for (let idx = 0; idx < filters.length; idx++) {
+                const filter = filters[idx];
+                if (!filter) continue;
+
                 let colMatch = false;
-                groupRows.forEach((row, idx) => {
-                    let cellText = "";
-                    if (colIdx === 0) {
-                        const customerCell = row.querySelector("td[rowspan]");
-                        if (customerCell) cellText = customerCell.innerText.toLowerCase().trim();
-                    } else if (colIdx === 1) {
-                        const styleCell = groupRows[0].querySelector(".style-cell");
-                        if (styleCell) cellText = styleCell.innerText.toLowerCase().trim();
-                    } else {
-                        const offset = colIdx - 2;
-                        const normalCells = row.querySelectorAll("td:not([rowspan])");
-                        if (normalCells[offset]) cellText = normalCells[offset].innerText.toLowerCase().trim();
-                    }
-                    if (cellText.includes(filter)) colMatch = true;
-                });
-                if (!colMatch) groupMatch = false;
-            });
+                if (idx === 0) { 
+                    if (cust && cust.toLowerCase().includes(filter)) colMatch = true;
+                } else if (idx === 1) {
+                    if (style && style.toLowerCase().includes(filter)) colMatch = true;
+                } else {
+                    // (not used now) 
+                }
 
-            groupRows.forEach((row, idx) => {
-                row.style.display = groupMatch ? "" : "none";
-                row.querySelectorAll("[rowspan]").forEach(cell => {
-                    cell.style.display = (idx === 0 && groupMatch) ? "" : "none";
-                });
+                if (!colMatch) { ok = false; break; }
+            }
+
+            if (ok) visibleGroupKeys.add(groupKey);
+        }
+
+        for (const [groupKey, rows] of Object.entries(groups)) {
+            const show = visibleGroupKeys.has(groupKey);
+            rows.forEach(r => r.style.display = show ? "" : "none");
+        }
+
+        const customerVisibleRows = new Map();
+        for (const [groupKey, rows] of Object.entries(groups)) {
+            const [cust] = groupKey.split('||');
+            rows.forEach(r => {
+                if (r.style.display !== 'none') {
+                    if (!customerVisibleRows.has(cust)) customerVisibleRows.set(cust, []);
+                    customerVisibleRows.get(cust).push(r);
+                }
             });
-        });
+        }
+
+        for (const [cust, info] of customerMap.entries()) {
+            const custTd = info.td;
+            const visibleRows = customerVisibleRows.get(cust) || [];
+            if (visibleRows.length === 0) {
+                custTd.style.display = 'none';
+            } else {
+                custTd.style.display = '';
+                custTd.rowSpan = visibleRows.length;
+                const firstRow = visibleRows[0];
+                firstRow.insertBefore(custTd, firstRow.firstElementChild || null);
+            }
+        }
+
+        for (const [groupKey, info] of styleMap.entries()) {
+            const styleTd = info.td;
+            const rows = groups[groupKey] || [];
+            const visibleRows = rows.filter(r => r.style.display !== 'none');
+            if (visibleRows.length === 0) {
+                styleTd.style.display = 'none';
+            } else {
+                styleTd.style.display = '';
+                styleTd.rowSpan = visibleRows.length;
+                const firstRow = visibleRows[0];
+                const ref = firstRow.children[1] || null;
+                firstRow.insertBefore(styleTd, ref);
+            }
+        }
     }
 
-    // --- Toggle filter inputs on icon click ---
     const dropdownIcons = document.querySelectorAll(".dropdown-icon");
     dropdownIcons.forEach(icon => {
-        icon.addEventListener("click", function(e) {
+        icon.addEventListener("click", function (e) {
             e.stopPropagation();
             const input = icon.parentNode.querySelector(".filter-input");
             if (!input) return;
             input.classList.toggle("hidden");
             if (!input.classList.contains("hidden")) input.focus();
+            if (input.classList.contains("hidden")) filterTable();
         });
     });
 
-    // --- Attach keyup to all filter inputs ---
-    document.querySelectorAll('.filter-input').forEach(input => {
-        input.addEventListener('keyup', filterTable);
+    document.querySelectorAll(".filter-input").forEach(input => {
+        input.addEventListener("keyup", filterTable);
     });
 
-    // --- Handle style description clicks ---
     document.body.addEventListener('click', function(e) {
         const item = e.target.closest('.dropdown-item');
         if (!item) return;
         const url = item.getAttribute('data-url');
         if (url) window.location.href = url;
     });
+
+    filterTable();
 });
 </script>
 {% endblock %}
