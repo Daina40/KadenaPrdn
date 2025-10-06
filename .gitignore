@@ -2,9 +2,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-.env
-*.env
-
 **/migrations/*.pyc
 **/migrations/__pycache__/
 
