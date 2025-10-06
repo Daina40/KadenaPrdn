@@ -48,3 +48,13 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"{self.style.style_no} - {self.process}"
+
+class StyleImage(models.Model):
+    style = models.ForeignKey("StyleInfo", on_delete=models.CASCADE, related_name="images")
+    description = models.ForeignKey("StyleDescription", on_delete=models.CASCADE, related_name="images")
+    image_name = models.CharField(max_length=255, null=True, blank=True)
+    image_url = models.TextField(blank=True, null=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.image_name

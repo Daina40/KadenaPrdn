@@ -1,10 +1,11 @@
 import json
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from Style_Information_app.models import Customer, StyleInfo, StyleDescription,Comment
+from Style_Information_app.models import Customer, StyleInfo, StyleDescription, Comment, StyleImage
 from collections import defaultdict
-from django.utils import timezone
 from django.contrib import messages
+from django.core.files.storage import default_storage
+import os
 
 def style_info_add(request):
     if request.method == "POST":
@@ -272,3 +273,34 @@ def style_saved_table(request):
     return render(request, "style_information/style_saved_table.html", {
         "customers": merged_customers
     })
+
+
+def upload_style_image(request):
+    if request.method == "POST" and request.FILES.get("image"):
+        style_id = request.POST.get("style_id")
+        description_id = request.POST.get("description_id")
+        file = request.FILES["image"]
+
+        # ✅ Save the uploaded file to /media/style_images/
+        file_path = default_storage.save(os.path.join("style_images", file.name), file)
+        file_url = default_storage.url(file_path)
+
+        # ✅ Save record in the database
+        style = StyleInfo.objects.get(id=style_id)
+        description = StyleDescription.objects.get(id=description_id)
+
+        image = StyleImage.objects.create(
+            style=style,
+            description=description,
+            image_name=file.name,
+            image_url=file_url
+        )
+
+        return JsonResponse({
+            "success": True,
+            "image_id": image.id,
+            "image_name": image.image_name,
+            "image_url": image.image_url,
+        })
+
+    return JsonResponse({"success": False, "error": "Invalid request"})

@@ -128,11 +128,40 @@
                         <textarea name="program" class="form-control" placeholder="Enter program details">{{ prefinal.program }}</textarea>
                     </td>
                     <td class="label font-medium">File Attachment:</td>
-                    <td colspan="2" class="border p-1 text-right">
-                        <a href="#" class="bg-black text-white px-2 py-1 ml-1 rounded inline-block">
+                    <td colspan="2" class="border p-1 text-right relative">
+                        <input type="file" id="upload-image" hidden>
+                        <a href="#" id="upload-btn" class="bg-black text-white px-2 py-1 ml-1 rounded inline-block">
                             <i class="fa-solid fa-file-image"></i>
                         </a>
+
+                        <!-- Uploaded image list -->
+                        <div id="image-list" class="flex flex-wrap gap-2 mt-2">
+                            {% for img in style.images.all %}
+                            <div class="image-wrapper flex items-center gap-1 bg-gray-100 px-2 py-1 rounded">
+                                <a href="#" class="image-link text-blue-600 hover:underline"
+                                data-url="{{ img.image_url }}" data-name="{{ img.image_name }}">
+                                {{ img.image_name }}
+                                </a>
+                                <button type="button" class="text-red-500 font-bold ml-1 delete-btn" data-id="{{ img.id }}">
+                                    <i class="fa-regular fa-circle-xmark"></i>
+                                </button>
+                            </div>
+
+                            {% endfor %}
+                        </div>
                     </td>
+
+                    <!-- Popup Modal -->
+                    <div id="image-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50">
+                        <div class="relative bg-white rounded-lg p-2 shadow-lg">
+                            <button id="close-modal" class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded">X</button>
+                            <a id="download-btn" href="#" download class="absolute top-2 right-12 bg-blue-500 text-white px-2 py-1 rounded">
+                                <i class="fa-solid fa-download"></i>
+                            </a>
+                            <img id="modal-img" src="" alt="Preview" class="max-h-[80vh] max-w-[80vw] rounded-lg">
+                        </div>
+                    </div>
+
                 </tr>
             </table>
 
@@ -1207,6 +1236,118 @@
                         alert("Failed to save comment. Please try again.");
                     });
                 });
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const uploadBtn = document.getElementById("upload-btn");
+            const uploadInput = document.getElementById("upload-image");
+            const imageList = document.getElementById("image-list");
+
+            const modal = document.getElementById("image-modal");
+            const modalImg = document.getElementById("modal-img");
+            const closeModal = document.getElementById("close-modal");
+            const downloadBtn = document.getElementById("download-btn");
+
+            // Trigger file input
+            uploadBtn.addEventListener("click", e => {
+                e.preventDefault();
+                uploadInput.click();
+            });
+
+            // Upload image
+            uploadInput.addEventListener("change", function() {
+                const file = this.files[0];
+                if (!file) return;
+
+                const formData = new FormData();
+                formData.append("image", file);
+                formData.append("style_id", "{{ style.id }}");
+                formData.append("description_id", "{{ description.id }}");
+
+                fetch("{% url 'upload_style_image' %}", {
+                    method: "POST",
+                    headers: { "X-CSRFToken": csrftoken },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Create new image wrapper
+                        const wrapper = document.createElement("div");
+                        wrapper.className = "image-wrapper flex items-center gap-1 bg-gray-100 px-2 py-1 rounded";
+                        wrapper.innerHTML = `
+                            <a href="#" class="image-link text-blue-600 hover:underline" 
+                            data-url="${data.image_url}" data-name="${data.image_name}">
+                            ${data.image_name}
+                            </a>
+                            <button type="button" class="text-red-500 font-bold ml-1 delete-btn" data-id="${data.image_id}">
+                                <i class="fa-regular fa-circle-xmark"></i>
+                            </button>
+                        `;
+                        imageList.appendChild(wrapper);
+
+                    } else {
+                        alert("Failed to upload image!");
+                    }
+                });
+            });
+
+            // Event delegation for delete and modal preview
+            imageList.addEventListener("click", function(e) {
+                // Find delete button, even if clicked on icon
+                const deleteBtn = e.target.closest(".delete-btn");
+                if (deleteBtn) {
+                    e.preventDefault(); // Prevent accidental form submission
+
+                    const wrapper = deleteBtn.closest(".image-wrapper"); // select the wrapper
+                    if (!wrapper) return;
+
+                    const id = deleteBtn.dataset.id;
+
+                    // Optional: send delete request to server
+                    fetch(`/delete-style-image/${id}/`, {
+                        method: "POST",
+                        headers: { "X-CSRFToken": csrftoken }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        // Always remove wrapper visually, even if server fails
+                        wrapper.remove();
+                    })
+                    .catch(() => {
+                        wrapper.remove(); // fallback: remove visually if fetch fails
+                    });
+
+                    return;
+                }
+
+                // Image preview modal
+                const link = e.target.closest(".image-link");
+                if (link) {
+                    e.preventDefault();
+                    const url = link.dataset.url;
+                    const name = link.dataset.name;
+                    modalImg.src = url;
+                    downloadBtn.href = url;
+                    downloadBtn.download = name;
+                    modal.classList.remove("hidden");
+                }
+            });
+
+            // Close modal
+            closeModal.addEventListener("click", () => {
+                modal.classList.add("hidden");
+                modalImg.src = "";
+            });
+
+            // Click outside modal to close
+            modal.addEventListener("click", e => {
+                if (e.target === modal) {
+                    modal.classList.add("hidden");
+                    modalImg.src = "";
+                }
             });
         });
     </script>
