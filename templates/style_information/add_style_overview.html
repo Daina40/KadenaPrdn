@@ -56,7 +56,7 @@
                                                     <input type="text" placeholder="Search description..." class="desc-search text-black border p-1 w-full mb-1">
                                                     {% if item.descriptions %}
                                                         {% for desc in item.descriptions %}
-                                                            <div class="dropdown-item px-2 py-1 hover:bg-gray-200 cursor-pointer" data-url="{% url 'style_detail' desc.id %}">
+                                                            <div class="dropdown-item px-2 py-1 hover:bg-gray-200 cursor-pointer" data-url="{% url 'style_detail' desc.style.id %}">
                                                                 {{ desc.style_description }}
                                                             </div>
                                                         {% endfor %}

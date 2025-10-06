@@ -1,4 +1,5 @@
 {% extends 'style_information/base.html' %}
+{% load comment_filters %}
 {% block title %}Summary of Style Information{% endblock %}
 {% block content %}
     <div class="mt-3 mb-1 w-full px-4">
@@ -14,7 +15,7 @@
                 </a>
                 -->
             </div>
-        <form method="POST" action="{% url 'style_saved_table' style.id %}">
+        <form method="POST" action="{% url 'save_style_info' style.id %}">
             {% csrf_token %}
             <table class="excel-table w-full mb-4">
 
@@ -45,7 +46,7 @@
 
                     <td class="label font-medium">Technician:</td>
                     <td>
-                        <select class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                        <select name="technician" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
                             <option value="">Select Technician</option>
                             {% for t in technicians %}
                                 <option value="{{ t }}">{{ t }}</option>
@@ -56,7 +57,8 @@
                 <tr>
                     <td class="label font-medium">Season:</td>
                     <td>
-                        <select class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                        <select name="season" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+
                             <option value="">Select Season</option>
                             {% for s in seasons %}
                                 <option value="{{ s }}">{{ s }}</option>
@@ -66,12 +68,13 @@
 
                     <td class="label font-medium">Order Qty:</td>
                     <td>
-                        <input type="number" class="form-control">
+                        <input type="number" name="order_qty" value="{{ style.order_qty|default:'' }}" 
+                            class="form-control" required min="1" placeholder="Enter order quantity">
                     </td>
 
                     <td class="label font-medium">QC:</td>
                     <td>
-                        <select class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                        <select name="qc" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
                             <option value="">Select QC</option>
                             {% for qc in qcs %}
                                 <option value="{{ qc }}">{{ qc }}</option>
@@ -86,7 +89,7 @@
                     </td>
                     <td class="label font-medium">APM:</td>
                     <td>
-                        <select class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                        <select name="apm" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
                             <option>Select APM</option>
                             {% for apm in apms %}
                                 <option value="{{ apm }}">{{ apm }}</option>
@@ -95,7 +98,7 @@
                     </td>
                     <td class="label font-medium">QA:</td>
                     <td>
-                        <select class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                        <select name="qa" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
                             <option>Select QA</option>
                             {% for qa in qas %}
                                 <option value="{{ qa }}">{{ qa }}</option>
@@ -111,7 +114,7 @@
 
                     <td class="label font-medium">TQS:</td>
                     <td>
-                        <select class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                        <select name="tqs" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
                             <option>Select TQS</option>
                             {% for tqs in tqss %}
                                 <option value="{{ tqs }}">{{ tqs }}</option>
@@ -150,12 +153,29 @@
                 <td class="border p-1 font-medium" rowspan="3">Material Concerns (SMS)</td>
                 <td class="border p-1" rowspan="3">W/House / QC / CS</td>
                 <td class="border p-1">Fabric issue</td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell" data-process="Fabric issue">
+                    {{ comments_dict|get_comment:"Fabric issue" }}
+                </td>
+
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="Fabric issue"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="Fabric issue"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -168,12 +188,28 @@
             </tr>
             <tr>
                 <td class="border p-1">Trims issue</td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell" data-process="Trims issue">
+                    {{ comments_dict|get_comment:"Trims issue" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
+                        <!-- Add icon -->
+                        <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="Trims issue"
+                            data-style="{{ style.id }}">
                             <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="Trims issue"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -186,12 +222,28 @@
             </tr>
             <tr>
                 <td class="border p-1">Bonding / Seam Tape parameter</td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell" data-process="Bonding / Seam Tape parameter">
+                    {{ comments_dict|get_comment:"Bonding / Seam Tape parameter" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="Bonding / Seam Tape parameter"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="Bonding / Seam Tape parameter"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -207,12 +259,28 @@
                 <td class="border p-1 font-medium" rowspan="3">Logo Application</td>
                 <td class="border p-1" rowspan="3">QC/Prdn</td>
                 <td class="border p-1">Printing Issue</td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell" data-process="Printing issue">
+                    {{ comments_dict|get_comment:"Printing issue" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="Printing issue"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="Printing issue"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -225,12 +293,28 @@
             </tr>
             <tr>
                 <td class="border p-1">Embroidery issue</td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell" data-process="Embroidery issue">
+                    {{ comments_dict|get_comment:"Embroidery issue" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="Embroidery issue"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="Embroidery issue"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -243,12 +327,28 @@
             </tr>
             <tr>
                 <td class="border p-1">Heat transfer issue</td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell" data-process="Heat transfer issue">
+                    {{ comments_dict|get_comment:"Heat transfer issue" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="Heat transfer issue"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="Heat transfer issue"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -264,12 +364,28 @@
                 <td class="border p-1 font-medium">Construction</td>
                 <td class="border p-1">APM/QC/TECH</td>
                 <td class="border p-1"></td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell" data-process="APM/QC/TECH">
+                    {{ comments_dict|get_comment:"APM/QC/TECH" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="APM/QC/TECH"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="APM/QC/TECH"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -285,12 +401,28 @@
                 <td class="border p-1 font-medium">Stitching and Sewing(Special tools, M/C, Needle etc.)</td>
                 <td class="border p-1">APM/QC/TECH/Maint</td>
                 <td class="border p-1"></td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell" data-process="APM/QC/TECH/Maint">
+                    {{ comments_dict|get_comment:"APM/QC/TECH/Maint" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="APM/QC/TECH/Maint"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="APM/QC/TECH/Maint"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -306,12 +438,28 @@
                 <td class="border p-1 font-medium" rowspan="3">SMS Notes & Risk Analysis</td>
                 <td class="border p-1" rowspan="3">QC & QA/CS</td>
                 <td class="border p-1"></td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell" data-process="QC & QA/CS">
+                    {{ comments_dict|get_comment:"QC & QA/CS" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
+                        <!-- Add icon -->
+                        <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="QC & QA/CS"
+                            data-style="{{ style.id }}">
                             <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="QC & QA/CS"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -324,12 +472,28 @@
             </tr>
             <tr>
                 <td class="border p-1"></td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell" data-process="QC & QA/CS">
+                    {{ comments_dict|get_comment:"QC & QA/CS" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
+                        <!-- Add icon -->
+                        <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="QC & QA/CS"
+                            data-style="{{ style.id }}">
                             <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="QC & QA/CS"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -342,12 +506,28 @@
             </tr>
             <tr>
                 <td class="border p-1"></td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell" data-process="QC & QA/CS">
+                    {{ comments_dict|get_comment:"QC & QA/CS" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
+                        <!-- Add icon -->
+                        <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="QC & QA/CS"
+                            data-style="{{ style.id }}">
                             <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="QC & QA/CS"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -363,12 +543,28 @@
                 <td class="border p-1 font-medium">Size Set Evaluation & Comments</td>
                 <td class="border p-1">QC</td>
                 <td class="border p-1"></td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell" data-process="QC">
+                    {{ comments_dict|get_comment:"QC" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="QC"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="QC"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -384,12 +580,29 @@
                 <td class="border p-1 font-medium" rowspan="4">PP meeting Special attention(SMS review, Size set review, Pattern review, Risk point review & Customer comments review</td>
                 <td class="border p-1" rowspan="4">W/House/QC/CS/APM/TECH/<br>Mechanic/QA/PATTERN/CUTTING</td>
                 <td class="border p-1"></td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell"
+                    data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING">
+                    {{ comments_dict|get_comment:"W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -402,12 +615,29 @@
             </tr>
             <tr>
                 <td class="border p-1"></td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell"
+                    data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING">
+                    {{ comments_dict|get_comment:"W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -420,12 +650,29 @@
             </tr>
             <tr>
                 <td class="border p-1"></td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell"
+                    data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING">
+                    {{ comments_dict|get_comment:"W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
+                        <!-- Add icon -->
+                        <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
+                            data-style="{{ style.id }}">
                             <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -438,12 +685,29 @@
             </tr>
             <tr>
                 <td class="border p-1"></td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell"
+                    data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING">
+                    {{ comments_dict|get_comment:"W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -459,12 +723,29 @@
                 <td class="border p-1 font-medium" rowspan="4">Bulk Production</td>
                 <td class="border p-1" rowspan="4">APM/QC/TECH</td>
                 <td class="border p-1">Line Layout</td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell"
+                    data-process="Line Layout">
+                    {{ comments_dict|get_comment:"Line Layout" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
+                        <!-- Add icon -->
+                        <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="Line Layout"
+                            data-style="{{ style.id }}">
                             <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="Line Layout"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -477,12 +758,29 @@
             </tr>
             <tr>
                 <td class="border p-1">Machine Layout</td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell"
+                    data-process="Machine Layout">
+                    {{ comments_dict|get_comment:"Machine Layout" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="Machine Layout"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="Machine Layout"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -495,12 +793,29 @@
             </tr>
             <tr>
                 <td class="border p-1">Special Tools (Gage, Guide, Folder)</td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell"
+                    data-process="Special Tools (Gage, Guide, Folder)">
+                    {{ comments_dict|get_comment:"Special Tools (Gage, Guide, Folder)" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
+                        <!-- Add icon -->
+                        <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="Special Tools (Gage, Guide, Folder)"
+                            data-style="{{ style.id }}">
                             <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="Special Tools (Gage, Guide, Folder)"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -513,12 +828,29 @@
             </tr>
             <tr>
                 <td class="border p-1">KPM, KPI & Self Inspection</td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell"
+                    data-process="KPM, KPI & Self Inspection">
+                    {{ comments_dict|get_comment:"KPM, KPI & Self Inspection" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="KPM, KPI & Self Inspection"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="KPM, KPI & Self Inspection"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -534,12 +866,29 @@
                 <td class="border p-1 font-medium" rowspan="3">1st Output</td>
                 <td class="border p-1" rowspan="3">Individual Team</td>
                 <td class="border p-1">QC Comments</td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell"
+                    data-process="QC Comments">
+                    {{ comments_dict|get_comment:"QC Comments" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="QC Comments"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="QC Comments"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -552,12 +901,29 @@
             </tr>
             <tr>
                 <td class="border p-1">QA Comments</td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell"
+                    data-process="QA Comments">
+                    {{ comments_dict|get_comment:"QA Comments" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="QA Comments"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="QA Comments"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -570,12 +936,29 @@
             </tr>
             <tr>
                 <td class="border p-1">TQS Comments</td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell"
+                    data-process="TQS Comments">
+                    {{ comments_dict|get_comment:"TQS Comments" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="TQS Comments"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="TQS Comments"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -591,12 +974,29 @@
                 <td class="border p-1 font-medium">Factory Inline Issue</td>
                 <td class="border p-1">APM & QC</td>
                 <td class="border p-1">Factory FeedBack & Solution</td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell"
+                    data-process="Factory FeedBack & Solution">
+                    {{ comments_dict|get_comment:"Factory FeedBack & Solution" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="Factory FeedBack & Solution"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="Factory FeedBack & Solution"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -612,12 +1012,29 @@
                 <td class="border p-1 font-medium" rowspan="2">Customer Comments</td>
                 <td class="border p-1" rowspan="2">QA</td>
                 <td class="border p-1">Inline Comments</td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell"
+                    data-process="Inline Comments">
+                    {{ comments_dict|get_comment:"Inline Comments" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="Inline Comments"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="Inline Comments"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -630,12 +1047,29 @@
             </tr>
             <tr>
                 <td class="border p-1">Final Comments</td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell"
+                    data-process="Final Comments">
+                    {{ comments_dict|get_comment:"Final Comments" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="Final Comments"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="Final Comments"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -651,12 +1085,29 @@
                 <td class="border p-1 font-medium">Others</td>
                 <td class="border p-1"></td>
                 <td class="border p-1"></td>
-                <td class="border p-1"></td>
+                <td class="border p-1 comment-cell"
+                    data-process="Others">
+                    {{ comments_dict|get_comment:"Others" }}
+                </td>
+                <!-- ACTION COLUMN -->
                 <td class="border p-1">
                     <div class="flex justify-between">
-                        <a href="{% url "add_comments" %}" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-square-plus"></i>
+                        <!-- Add icon -->
+                        <a href="#"
+                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="Others"
+                        data-style="{{ style.id }}">
+                        <i class="fa-regular fa-square-plus"></i>
                         </a>
+                        
+                        <!-- Save button (hidden initially) -->
+                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                data-process="Others"
+                                data-style="{{ style.id }}">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+
+                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -682,9 +1133,84 @@
     </div>
 
     <script>
-        $(document).ready(function() {
-            $('.selectpicker').selectpicker();
+        document.addEventListener("DOMContentLoaded", function () {
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            // Handle click on ➕ button
+            document.querySelectorAll(".add-comment-btn").forEach(btn => {
+                btn.addEventListener("click", function (e) {
+                    e.preventDefault();
+
+                    const process = this.dataset.process;
+                    const styleId = this.dataset.style;
+                    const row = this.closest("tr");
+                    const commentCell = row.querySelector(`.comment-cell[data-process="${process}"]`);
+                    const saveBtn = row.querySelector(`.save-comment-btn[data-process="${process}"]`);
+
+                    // Create a text input inside comment cell
+                    if (!commentCell.querySelector("input.comment-input")) {
+                        const input = document.createElement("input");
+                        input.type = "text";
+                        input.className = "comment-input w-full border p-1 mt-1";
+                        input.placeholder = "Enter comment...";
+                        commentCell.appendChild(input);
+                        input.focus();
+                    }
+
+                    // Hide ➕, show 💾
+                    this.classList.add("hidden");
+                    saveBtn.classList.remove("hidden");
+                });
+            });
+
+            // Handle click on 💾 button
+            document.querySelectorAll(".save-comment-btn").forEach(btn => {
+                btn.addEventListener("click", function (e) {
+                    e.preventDefault();
+
+                    const process = this.dataset.process;
+                    const styleId = this.dataset.style;
+                    const row = this.closest("tr");
+                    const commentCell = row.querySelector(`.comment-cell[data-process="${process}"]`);
+                    const addBtn = row.querySelector(`.add-comment-btn[data-process="${process}"]`);
+                    const input = commentCell.querySelector("input.comment-input");
+                    const comment = input?.value.trim();
+
+                    if (!comment) {
+                        alert("Please enter a comment before saving.");
+                        return;
+                    }
+
+                    // Send via AJAX
+                    fetch(`/style/${styleId}/save_comments/`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": csrftoken,
+                        },
+                        body: JSON.stringify({ process: process, comment: comment }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // ✅ No popup for success
+                            commentCell.innerHTML = `<p class="text-sm">${comment}</p>`;
+                            this.classList.add("hidden");
+                            addBtn.classList.remove("hidden");
+                        } else {
+                            // ⚠️ Show alert only if failed on backend
+                            alert("Error: " + (data.error || "Failed to save comment."));
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert("Failed to save comment. Please try again.");
+                    });
+                });
+            });
         });
     </script>
+
+
 
 {% endblock %}

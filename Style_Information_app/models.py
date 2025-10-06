@@ -19,7 +19,12 @@ class StyleInfo(models.Model):
     qc = models.CharField(max_length=100, blank=True, null=True)
     qa = models.CharField(max_length=100, blank=True, null=True)
     tqs = models.CharField(max_length=100, blank=True, null=True)
-    comments = models.TextField(blank=True, null=True)
+
+    source = models.CharField(
+        max_length=50,
+        choices=[('overview', 'Overview Add'), ('detail', 'Detail Save')],
+        default='overview'
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -31,4 +36,15 @@ class StyleDescription(models.Model):
     style_description = models.TextField(blank=True, null=True)
     
     def __str__(self):
-        return f"{self.style.style_no} - {self.description}"
+        return f"{self.style.style_no} - {self.style_description}"
+    
+class Comment(models.Model):
+    style = models.ForeignKey(StyleInfo, on_delete=models.CASCADE, related_name="comments")
+    responsible_person = models.CharField(max_length=200, blank=True, null=True)
+    process = models.CharField(max_length=200, blank=True, null=True)
+    comment_text = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.style.style_no} - {self.process}"
