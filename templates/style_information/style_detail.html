@@ -146,7 +146,6 @@
                                     <i class="fa-regular fa-circle-xmark"></i>
                                 </button>
                             </div>
-
                             {% endfor %}
                         </div>
                     </td>
@@ -161,7 +160,6 @@
                             <img id="modal-img" src="" alt="Preview" class="max-h-[80vh] max-w-[80vw] rounded-lg">
                         </div>
                     </div>
-
                 </tr>
             </table>
 
@@ -1274,7 +1272,7 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        // Create new image wrapper
+                        // Add image to the list
                         const wrapper = document.createElement("div");
                         wrapper.className = "image-wrapper flex items-center gap-1 bg-gray-100 px-2 py-1 rounded";
                         wrapper.innerHTML = `
@@ -1288,6 +1286,8 @@
                         `;
                         imageList.appendChild(wrapper);
 
+                        // Reset file input so the same file can be uploaded again
+                        uploadInput.value = '';
                     } else {
                         alert("Failed to upload image!");
                     }
@@ -1296,30 +1296,29 @@
 
             // Event delegation for delete and modal preview
             imageList.addEventListener("click", function(e) {
-                // Find delete button, even if clicked on icon
+                // Delete button
                 const deleteBtn = e.target.closest(".delete-btn");
                 if (deleteBtn) {
-                    e.preventDefault(); // Prevent accidental form submission
-
-                    const wrapper = deleteBtn.closest(".image-wrapper"); // select the wrapper
+                    e.preventDefault(); // prevent form submission
+                    const wrapper = deleteBtn.closest(".image-wrapper");
                     if (!wrapper) return;
 
                     const id = deleteBtn.dataset.id;
 
-                    // Optional: send delete request to server
                     fetch(`/delete-style-image/${id}/`, {
                         method: "POST",
                         headers: { "X-CSRFToken": csrftoken }
                     })
                     .then(res => res.json())
                     .then(data => {
-                        // Always remove wrapper visually, even if server fails
-                        wrapper.remove();
+                        wrapper.remove(); // always remove visually
                     })
                     .catch(() => {
                         wrapper.remove(); // fallback: remove visually if fetch fails
                     });
 
+                    // Reset file input so same file can be re-uploaded
+                    uploadInput.value = '';
                     return;
                 }
 
@@ -1350,6 +1349,7 @@
                 }
             });
         });
+
     </script>
 
 
