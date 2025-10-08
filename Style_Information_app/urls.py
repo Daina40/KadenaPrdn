@@ -11,4 +11,8 @@ urlpatterns = [
     path('style/<int:style_id>/save/', views.save_style_info, name='save_style_info'),
     path('saved-table/', views.style_saved_table, name='style_saved_table'),
     path('upload-style-image/', views.upload_style_image, name='upload_style_image'),
+    path('delete-style-image/<int:image_id>/', views.delete_style_image, name='delete_style_image'),
+    
+    path('style_view/<int:style_id>/', views.style_view, name='style_view'),
+
 ]

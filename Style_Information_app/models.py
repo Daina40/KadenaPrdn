@@ -40,6 +40,7 @@ class StyleDescription(models.Model):
     
 class Comment(models.Model):
     style = models.ForeignKey(StyleInfo, on_delete=models.CASCADE, related_name="comments")
+    description = models.ForeignKey(StyleDescription, on_delete=models.CASCADE, related_name="comments", null=True, blank=True)
     responsible_person = models.CharField(max_length=200, blank=True, null=True)
     process = models.CharField(max_length=200, blank=True, null=True)
     comment_text = models.TextField(blank=True, null=True)

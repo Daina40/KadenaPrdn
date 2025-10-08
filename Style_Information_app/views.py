@@ -134,16 +134,18 @@ def delete_add_style_overview(request, id):
     return redirect('add_style_overview')
 
 def style_detail(request, style_id):
-    style = get_object_or_404(StyleInfo, id=style_id)
-    
-    description = style.descriptions.first()
-    
+    style = get_object_or_404(
+        StyleInfo.objects.prefetch_related("images", "descriptions__images", "comments", "customer"),
+        id=style_id
+    )
+
+    descriptions = style.descriptions.all()
+
     comments_dict = {
-        c.process: c.comment_text
-        for c in style.comments.all()
+        desc.id: {c.process: c.comment_text for c in style.comments.filter(description=desc)}
+        for desc in descriptions
     }
-    
-    # All distinct values for filters or dropdowns
+
     styles = StyleInfo.objects.all()
     customers = styles.values_list("customer__customer_name", flat=True).distinct()
     seasons = styles.values_list("season", flat=True).distinct()
@@ -157,7 +159,7 @@ def style_detail(request, style_id):
 
     context = {
         "style": style,
-        "description": description,
+        "descriptions": descriptions,
         "comments_dict": comments_dict,
         "customers": customers,
         "seasons": seasons,
@@ -168,8 +170,10 @@ def style_detail(request, style_id):
         "qas": qas,
         "tqss": tqss,
         "style_nos": style_nos,
+        "read_only": False,
     }
     return render(request, "style_information/style_detail.html", context)
+
 
 def save_comments(request, style_id):
     style = get_object_or_404(StyleInfo, id=style_id)
@@ -230,7 +234,14 @@ def save_style_info(request, style_id):
         new_style.save()
 
         new_style.descriptions.add(*original_style.descriptions.all())
-
+        
+        for img in original_style.images.all():
+            StyleImage.objects.create(
+                style=new_style,
+                description=img.description,  # keep the same description
+                image_name=img.image_name,
+                image_url=img.image_url,
+            )
 
         messages.success(request, "Style information saved successfully.")
         return redirect("style_saved_table")
@@ -281,11 +292,11 @@ def upload_style_image(request):
         description_id = request.POST.get("description_id")
         file = request.FILES["image"]
 
-        # ✅ Save the uploaded file to /media/style_images/
+        # ✅ Save to media folder
         file_path = default_storage.save(os.path.join("style_images", file.name), file)
         file_url = default_storage.url(file_path)
 
-        # ✅ Save record in the database
+        # ✅ Save to database (linked to style + description)
         style = StyleInfo.objects.get(id=style_id)
         description = StyleDescription.objects.get(id=description_id)
 
@@ -304,3 +315,62 @@ def upload_style_image(request):
         })
 
     return JsonResponse({"success": False, "error": "Invalid request"})
+
+def delete_style_image(request, image_id):
+    if request.method == "POST":
+        try:
+            image = StyleImage.objects.get(id=image_id)
+            
+            # ✅ Delete the image file from storage (optional but clean)
+            if image.image_url:
+                file_path = image.image_url.replace("/media/", "")
+                if default_storage.exists(file_path):
+                    default_storage.delete(file_path)
+
+            # ✅ Delete from database
+            image.delete()
+            return JsonResponse({"success": True})
+        except StyleImage.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Image not found"})
+    return JsonResponse({"success": False, "error": "Invalid request"})
+
+def style_view(request, style_id):
+    style = get_object_or_404(
+        StyleInfo.objects.prefetch_related("images", "descriptions__images", "comments", "customer"),
+        id=style_id
+    )
+
+    # Get all descriptions
+    descriptions = style.descriptions.all()
+    comments_dict = {
+        desc.id: {c.process: c.comment_text for c in style.comments.filter(description=desc)}
+        for desc in descriptions
+    }
+    
+    styles = StyleInfo.objects.all()
+    customers = styles.values_list("customer__customer_name", flat=True).distinct()
+    seasons = styles.values_list("season", flat=True).distinct()
+    lines = styles.values_list("production_line", flat=True).distinct()
+    apms = styles.values_list("apm", flat=True).distinct()
+    technicians = styles.values_list("technician", flat=True).distinct()
+    qcs = styles.values_list("qc", flat=True).distinct()
+    qas = styles.values_list("qa", flat=True).distinct()
+    tqss = styles.values_list("tqs", flat=True).distinct()
+    style_nos = styles.values_list("style_no", flat=True).distinct()
+
+    context = {
+        "style": style,
+        "descriptions": descriptions,
+        "comments_dict": comments_dict,
+        "customers": customers,
+        "seasons": seasons,
+        "lines": lines,
+        "apms": apms,
+        "technicians": technicians,
+        "qcs": qcs,
+        "qas": qas,
+        "tqss": tqss,
+        "style_nos": style_nos,
+        "read_only": True,
+    }
+    return render(request, "style_information/style_detail.html", context)

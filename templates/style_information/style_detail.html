@@ -2,8 +2,21 @@
 {% load comment_filters %}
 {% block title %}Summary of Style Information{% endblock %}
 {% block content %}
+<style>
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.no-image-msg {
+    animation: fadeIn 0.4s ease-in-out;
+    opacity: 0.85;
+}
+</style>
     <div class="mt-3 mb-1 w-full px-4">
-            <h1 class="text-2xl text-green-500 font-bold mb-6 text-center">Summary of Style Information</h1>
+            <h1 class="text-2xl text-green-500 font-bold mb-6 text-center">
+                {% if read_only %}View Saved Style (Read Only){% else %}Summary of Style Information{% endif %}
+            </h1>
 
             <div class="flex justify-left my-2">
                 <a href="{% url "style_info_add" %}" class="bg-blue-800 text-white px-2 py-1 text-[14px] rounded font-bold hover:bg-blue-900">
@@ -26,7 +39,7 @@
                     <td></td>
                     <td class="label font-medium">Date:</td>
                     <td>
-                        <input type="date" name="date" value="{{ prefinal.date|date:'Y-m-d' }}" class="w-full border p-2 rounded" required>
+                        <input type="date" name="date" value="{{ style.created_at|date:'Y-m-d' }}" class="w-full border p-2 rounded" required {% if read_only %} readonly {% endif %}>
                     </td>
                 </tr>
                 <tr>
@@ -36,50 +49,65 @@
                     </td>
                     <td class="label font-medium">Production Line:</td>
                     <td>
-                        <select name="production_line" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
-                            <option value="">Select Line</option>
-                            {% for l in lines %}
-                                <option value="{{ l }}">{{ l }}</option>
-                            {% endfor %}
-                        </select>
+                        {% if read_only %}
+                            <input type="text" class="form-control bg-gray-100 cursor-text" value="{{ style.production_line }}" readonly>
+                        {% else %}
+                            <select name="production_line" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                                <option value="">Select Line</option>
+                                {% for l in lines %}
+                                    <option value="{{ l }}">{{ l }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
                     </td>
 
                     <td class="label font-medium">Technician:</td>
                     <td>
-                        <select name="technician" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
-                            <option value="">Select Technician</option>
-                            {% for t in technicians %}
-                                <option value="{{ t }}">{{ t }}</option>
-                            {% endfor %}
-                        </select>
+                        {% if read_only %}
+                            <input type="text" class="form-control bg-gray-100 cursor-text" value="{{ style.technician }}" readonly>
+                        {% else %}
+                            <select name="technician" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                                <option value="">Select Technician</option>
+                                {% for t in technicians %}
+                                    <option value="{{ t }}">{{ t }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
                     </td>
                 </tr>
                 <tr>
                     <td class="label font-medium">Season:</td>
                     <td>
-                        <select name="season" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
-
-                            <option value="">Select Season</option>
-                            {% for s in seasons %}
-                                <option value="{{ s }}">{{ s }}</option>
-                            {% endfor %}
-                        </select>
+                        {% if read_only %}
+                            <input type="text" class="form-control bg-gray-100 cursor-text" value="{{ style.season }}" readonly>
+                        {% else %}
+                            <select name="season" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                                <option value="">Select Season</option>
+                                {% for s in seasons %}
+                                    <option value="{{ s }}">{{ s }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
                     </td>
 
                     <td class="label font-medium">Order Qty:</td>
                     <td>
                         <input type="number" name="order_qty" value="{{ style.order_qty|default:'' }}" 
-                            class="form-control" required min="1" placeholder="Enter order quantity">
+                            class="form-control" required placeholder="Enter order quantity" {% if read_only %}readonly class="bg-gray-100 cursor-text"{% endif %}>
                     </td>
 
                     <td class="label font-medium">QC:</td>
                     <td>
-                        <select name="qc" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
-                            <option value="">Select QC</option>
-                            {% for qc in qcs %}
-                                <option value="{{ qc }}">{{ qc }}</option>
-                            {% endfor %}
-                        </select>
+                        {% if read_only %}
+                            <input type="text" class="form-control bg-gray-100 cursor-text" value="{{ style.qc }}" readonly>
+                        {% else %}
+                            <select name="qc" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                                <option value="">Select QC</option>
+                                {% for qc in qcs %}
+                                    <option value="{{ qc }}">{{ qc }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
                     </td>
                 </tr>
                 <tr>
@@ -89,77 +117,110 @@
                     </td>
                     <td class="label font-medium">APM:</td>
                     <td>
-                        <select name="apm" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
-                            <option>Select APM</option>
-                            {% for apm in apms %}
-                                <option value="{{ apm }}">{{ apm }}</option>
-                            {% endfor %}
-                        </select>
+                        {% if read_only %}
+                            <input type="text" class="form-control bg-gray-100 cursor-text" value="{{ style.apm }}" readonly>
+                        {% else %}
+                            <select name="apm" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                                <option>Select APM</option>
+                                {% for apm in apms %}
+                                    <option value="{{ apm }}">{{ apm }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
                     </td>
                     <td class="label font-medium">QA:</td>
                     <td>
-                        <select name="qa" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
-                            <option>Select QA</option>
-                            {% for qa in qas %}
-                                <option value="{{ qa }}">{{ qa }}</option>
-                            {% endfor %}
-                        </select>
+                        {% if read_only %}
+                            <input type="text" class="form-control bg-gray-100 cursor-text" value="{{ style.qa }}" readonly>
+                        {% else %}
+                            <select name="qa" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                                <option>Select QA</option>
+                                {% for qa in qas %}
+                                    <option value="{{ qa }}">{{ qa }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
                     </td>
                 </tr>
                 <tr>
                     <td class="label font-medium">Style Description:</td>
                     <td>
-                        <textarea class="form-control" readonly style="text-align: left; white-space: pre-wrap;">{{ description.style_description }}</textarea>
+                        {% for desc in descriptions %}
+                        <textarea class="form-control" style="text-align: left; white-space: pre-wrap;" {% if read_only %}readonly{% endif %}>{{ desc.style_description }}</textarea>
+                        {% if not forloop.last %}<br>{% endif %}</textarea>
+                        {% empty %}
+                            <span>No description</span>
+                        {% endfor %}
                     </td>
 
                     <td class="label font-medium">TQS:</td>
                     <td>
-                        <select name="tqs" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
-                            <option>Select TQS</option>
-                            {% for tqs in tqss %}
-                                <option value="{{ tqs }}">{{ tqs }}</option>
-                            {% endfor %}
-                        </select>
+                        {% if read_only %}
+                            <input type="text" class="form-control bg-gray-100 cursor-text" value="{{ style.tqs }}" readonly>
+                        {% else %}
+                            <select name="tqs" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                                <option>Select TQS</option>
+                                {% for tqs in tqss %}
+                                    <option value="{{ tqs }}">{{ tqs }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
                     </td>
                 </tr>
                 <tr>
                     <td class="label font-medium">Program:</td>
-                    <td colspan="2">
-                        <textarea name="program" class="form-control" placeholder="Enter program details">{{ prefinal.program }}</textarea>
+                    <td>
+                        <textarea name="program" class="form-control" placeholder="Enter program details">{{ style.program }}</textarea>
                     </td>
-                    <td class="label font-medium">File Attachment:</td>
-                    <td colspan="2" class="border p-1 text-right relative">
-                        <input type="file" id="upload-image" hidden>
-                        <a href="#" id="upload-btn" class="bg-black text-white px-2 py-1 ml-1 rounded inline-block">
-                            <i class="fa-solid fa-file-image"></i>
-                        </a>
+                    {% for description in descriptions %}
+                        <td></td>
+                        <td class="label font-medium">File Attachment:</td>
+                        <td colspan="2" class="border p-1 text-right align-top" style="width: 200px; height: 90px; position: relative;">
+                            {% if not read_only %}
+                            <!-- Hidden file input -->
+                            <input type="file" id="upload-image-{{ description.id }}" hidden>
 
-                        <!-- Uploaded image list -->
-                        <div id="image-list" class="flex flex-wrap gap-2 mt-2">
-                            {% for img in style.images.all %}
-                            <div class="image-wrapper flex items-center gap-1 bg-gray-100 px-2 py-1 rounded">
-                                <a href="#" class="image-link text-blue-600 hover:underline"
-                                data-url="{{ img.image_url }}" data-name="{{ img.image_name }}">
-                                {{ img.image_name }}
-                                </a>
-                                <button type="button" class="text-red-500 font-bold ml-1 delete-btn" data-id="{{ img.id }}">
-                                    <i class="fa-regular fa-circle-xmark"></i>
-                                </button>
+                            <!-- Upload button -->
+                            <a href="#" class="upload-btn bg-black text-white px-2 py-1 ml-1 rounded inline-block"
+                            data-description-id="{{ description.id }}">
+                                <i class="fa-solid fa-file-image"></i>
+                            </a>
+                            {% endif %}
+
+                            <!-- Uploaded image list -->
+                            <div id="image-list-{{ description.id }}" class="image-list flex flex-wrap gap-2 mt-2">
+                                {% for img in description.images.all %}
+                                <div class="image-wrapper flex items-center gap-1 bg-gray-100 px-2 py-1 rounded">
+                                    <a href="#" class="image-link text-blue-600 hover:underline"
+                                    data-url="{{ img.image_url }}" data-name="{{ img.image_name }}">
+                                        {{ img.image_name }}
+                                    </a>
+                                    {% if not read_only %}
+                                    <button type="button" class="text-red-500 font-bold ml-1 delete-btn" data-id="{{ img.id }}">
+                                        <i class="fa-regular fa-circle-xmark"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
                             </div>
-                            {% endfor %}
-                        </div>
-                    </td>
+                        </td>
+                    {% endfor %}
 
-                    <!-- Popup Modal -->
+                    <!-- ✅ Place modal outside the loop -->
                     <div id="image-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50">
                         <div class="relative bg-white rounded-lg p-2 shadow-lg">
-                            <button id="close-modal" class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded">X</button>
-                            <a id="download-btn" href="#" download class="absolute top-2 right-12 bg-blue-500 text-white px-2 py-1 rounded">
-                                <i class="fa-solid fa-download"></i>
+                            <button id="close-modal" type="button" class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                            <a id="download-btn" href="#" download
+                            class="absolute top-2 right-12 bg-blue-500 text-white px-2 py-1 rounded">
+                            <i class="fa-solid fa-download"></i>
                             </a>
-                            <img id="modal-img" src="" alt="Preview" class="max-h-[80vh] max-w-[80vw] rounded-lg">
+                            <img id="modal-img" src="" alt="Preview"
+                                class="max-h-[80vh] max-w-[80vw] rounded-lg">
                         </div>
                     </div>
+
                 </tr>
             </table>
 
@@ -176,33 +237,26 @@
             </thead>
 
             <tbody>
-            <tr>
-                <td class="border p-1 font-medium" rowspan="3">Material Concerns (SMS)</td>
-                <td class="border p-1" rowspan="3">W/House / QC / CS</td>
-                <td class="border p-1">Fabric issue</td>
-                <td class="border p-1 comment-cell" data-process="Fabric issue">
-                    {{ comments_dict|get_comment:"Fabric issue" }}
-                </td>
+                <tr>
+                    <td class="border p-1 font-medium" rowspan="3">Material Concerns (SMS)</td>
+                    <td class="border p-1" rowspan="3">W/House / QC / CS</td>
+                    <td class="border p-1">Fabric issue</td>
+                    <td class="border p-1 comment-cell" data-process="Fabric issue">
+                        {{ comments_dict|get_comment:"Fabric issue" }}
+                    </td>
 
                 <!-- ACTION COLUMN -->
                 <td class="border p-1">
+                    {% if not read_only %}
                     <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="Fabric issue"
-                        data-style="{{ style.id }}">
+                        <a href="#" class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                        data-process="Fabric issue" data-style="{{ style.id }}">
                         <i class="fa-regular fa-square-plus"></i>
                         </a>
-                        
-                        <!-- Save button (hidden initially) -->
                         <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="Fabric issue"
-                                data-style="{{ style.id }}">
+                                data-process="Fabric issue" data-style="{{ style.id }}">
                             <i class="fa-solid fa-floppy-disk"></i>
                         </button>
-
-                        <!-- Edit/Delete icons -->
                         <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                             <i class="fa-regular fa-pen-to-square"></i>
                         </a>
@@ -211,951 +265,1015 @@
                             <i class="fa-solid fa-trash-can"></i>
                         </a>
                     </div>
+                    {% endif %}
                 </td>
-            </tr>
-            <tr>
-                <td class="border p-1">Trims issue</td>
-                <td class="border p-1 comment-cell" data-process="Trims issue">
-                    {{ comments_dict|get_comment:"Trims issue" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                            data-process="Trims issue"
-                            data-style="{{ style.id }}">
-                            <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                </tr>
+                <tr>
+                    <td class="border p-1">Trims issue</td>
+                    <td class="border p-1 comment-cell" data-process="Trims issue">
+                        {{ comments_dict|get_comment:"Trims issue" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                                class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
                                 data-process="Trims issue"
                                 data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                                <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="Trims issue"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
 
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="border p-1">Bonding / Seam Tape parameter</td>
-                <td class="border p-1 comment-cell" data-process="Bonding / Seam Tape parameter">
-                    {{ comments_dict|get_comment:"Bonding / Seam Tape parameter" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="Bonding / Seam Tape parameter"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="Bonding / Seam Tape parameter"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
-
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-
-            <tr>
-                <td class="border p-1 font-medium" rowspan="3">Logo Application</td>
-                <td class="border p-1" rowspan="3">QC/Prdn</td>
-                <td class="border p-1">Printing Issue</td>
-                <td class="border p-1 comment-cell" data-process="Printing issue">
-                    {{ comments_dict|get_comment:"Printing issue" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="Printing issue"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="Printing issue"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
-
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="border p-1">Embroidery issue</td>
-                <td class="border p-1 comment-cell" data-process="Embroidery issue">
-                    {{ comments_dict|get_comment:"Embroidery issue" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="Embroidery issue"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="Embroidery issue"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
-
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="border p-1">Heat transfer issue</td>
-                <td class="border p-1 comment-cell" data-process="Heat transfer issue">
-                    {{ comments_dict|get_comment:"Heat transfer issue" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="Heat transfer issue"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="Heat transfer issue"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
-
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-
-            <tr>
-                <td class="border p-1 font-medium">Construction</td>
-                <td class="border p-1">APM/QC/TECH</td>
-                <td class="border p-1"></td>
-                <td class="border p-1 comment-cell" data-process="APM/QC/TECH">
-                    {{ comments_dict|get_comment:"APM/QC/TECH" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="APM/QC/TECH"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="APM/QC/TECH"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
-
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-
-            <tr>
-                <td class="border p-1 font-medium">Stitching and Sewing(Special tools, M/C, Needle etc.)</td>
-                <td class="border p-1">APM/QC/TECH/Maint</td>
-                <td class="border p-1"></td>
-                <td class="border p-1 comment-cell" data-process="APM/QC/TECH/Maint">
-                    {{ comments_dict|get_comment:"APM/QC/TECH/Maint" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="APM/QC/TECH/Maint"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="APM/QC/TECH/Maint"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
-
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-
-            <tr>
-                <td class="border p-1 font-medium" rowspan="3">SMS Notes & Risk Analysis</td>
-                <td class="border p-1" rowspan="3">QC & QA/CS</td>
-                <td class="border p-1"></td>
-                <td class="border p-1 comment-cell" data-process="QC & QA/CS">
-                    {{ comments_dict|get_comment:"QC & QA/CS" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border p-1">Bonding / Seam Tape parameter</td>
+                    <td class="border p-1 comment-cell" data-process="Bonding / Seam Tape parameter">
+                        {{ comments_dict|get_comment:"Bonding / Seam Tape parameter" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
                             class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                            data-process="QC & QA/CS"
+                            data-process="Bonding / Seam Tape parameter"
                             data-style="{{ style.id }}">
                             <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="QC & QA/CS"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="Bonding / Seam Tape parameter"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
 
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="border p-1"></td>
-                <td class="border p-1 comment-cell" data-process="QC & QA/CS">
-                    {{ comments_dict|get_comment:"QC & QA/CS" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="border p-1 font-medium" rowspan="3">Logo Application</td>
+                    <td class="border p-1" rowspan="3">QC/Prdn</td>
+                    <td class="border p-1">Printing Issue</td>
+                    <td class="border p-1 comment-cell" data-process="Printing issue">
+                        {{ comments_dict|get_comment:"Printing issue" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
                             class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                            data-process="QC & QA/CS"
+                            data-process="Printing issue"
                             data-style="{{ style.id }}">
                             <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="QC & QA/CS"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="Printing issue"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
 
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="border p-1"></td>
-                <td class="border p-1 comment-cell" data-process="QC & QA/CS">
-                    {{ comments_dict|get_comment:"QC & QA/CS" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border p-1">Embroidery issue</td>
+                    <td class="border p-1 comment-cell" data-process="Embroidery issue">
+                        {{ comments_dict|get_comment:"Embroidery issue" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
                             class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                            data-process="QC & QA/CS"
+                            data-process="Embroidery issue"
                             data-style="{{ style.id }}">
                             <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="Embroidery issue"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
+
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border p-1">Heat transfer issue</td>
+                    <td class="border p-1 comment-cell" data-process="Heat transfer issue">
+                        {{ comments_dict|get_comment:"Heat transfer issue" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="Heat transfer issue"
+                            data-style="{{ style.id }}">
+                            <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="Heat transfer issue"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
+
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="border p-1 font-medium">Construction</td>
+                    <td class="border p-1">APM/QC/TECH</td>
+                    <td class="border p-1"></td>
+                    <td class="border p-1 comment-cell" data-process="APM/QC/TECH">
+                        {{ comments_dict|get_comment:"APM/QC/TECH" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="APM/QC/TECH"
+                            data-style="{{ style.id }}">
+                            <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="APM/QC/TECH"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
+
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="border p-1 font-medium">Stitching and Sewing(Special tools, M/C, Needle etc.)</td>
+                    <td class="border p-1">APM/QC/TECH/Maint</td>
+                    <td class="border p-1"></td>
+                    <td class="border p-1 comment-cell" data-process="APM/QC/TECH/Maint">
+                        {{ comments_dict|get_comment:"APM/QC/TECH/Maint" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="APM/QC/TECH/Maint"
+                            data-style="{{ style.id }}">
+                            <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="APM/QC/TECH/Maint"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
+
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="border p-1 font-medium" rowspan="3">SMS Notes & Risk Analysis</td>
+                    <td class="border p-1" rowspan="3">QC & QA/CS</td>
+                    <td class="border p-1"></td>
+                    <td class="border p-1 comment-cell" data-process="QC & QA/CS">
+                        {{ comments_dict|get_comment:"QC & QA/CS" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                                class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
                                 data-process="QC & QA/CS"
                                 data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                                <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="QC & QA/CS"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
 
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-
-            <tr>
-                <td class="border p-1 font-medium">Size Set Evaluation & Comments</td>
-                <td class="border p-1">QC</td>
-                <td class="border p-1"></td>
-                <td class="border p-1 comment-cell" data-process="QC">
-                    {{ comments_dict|get_comment:"QC" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="QC"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="QC"
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border p-1"></td>
+                    <td class="border p-1 comment-cell" data-process="QC & QA/CS">
+                        {{ comments_dict|get_comment:"QC & QA/CS" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                                class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                                data-process="QC & QA/CS"
                                 data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                                <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="QC & QA/CS"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
 
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-
-            <tr>
-                <td class="border p-1 font-medium" rowspan="4">PP meeting Special attention(SMS review, Size set review, Pattern review, Risk point review & Customer comments review</td>
-                <td class="border p-1" rowspan="4">W/House/QC/CS/APM/TECH/<br>Mechanic/QA/PATTERN/CUTTING</td>
-                <td class="border p-1"></td>
-                <td class="border p-1 comment-cell"
-                    data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING">
-                    {{ comments_dict|get_comment:"W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border p-1"></td>
+                    <td class="border p-1 comment-cell" data-process="QC & QA/CS">
+                        {{ comments_dict|get_comment:"QC & QA/CS" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                                class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                                data-process="QC & QA/CS"
                                 data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                                <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="QC & QA/CS"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
 
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="border p-1"></td>
-                <td class="border p-1 comment-cell"
-                    data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING">
-                    {{ comments_dict|get_comment:"W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
 
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="border p-1"></td>
-                <td class="border p-1 comment-cell"
-                    data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING">
-                    {{ comments_dict|get_comment:"W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
+                <tr>
+                    <td class="border p-1 font-medium">Size Set Evaluation & Comments</td>
+                    <td class="border p-1">QC</td>
+                    <td class="border p-1"></td>
+                    <td class="border p-1 comment-cell" data-process="QC">
+                        {{ comments_dict|get_comment:"QC" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="QC"
+                            data-style="{{ style.id }}">
+                            <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="QC"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
+
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="border p-1 font-medium" rowspan="4">PP meeting Special attention(SMS review, Size set review, Pattern review, Risk point review & Customer comments review</td>
+                    <td class="border p-1" rowspan="4">W/House/QC/CS/APM/TECH/<br>Mechanic/QA/PATTERN/CUTTING</td>
+                    <td class="border p-1"></td>
+                    <td class="border p-1 comment-cell"
+                        data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING">
+                        {{ comments_dict|get_comment:"W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
                             class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
                             data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
                             data-style="{{ style.id }}">
                             <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
 
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="border p-1"></td>
-                <td class="border p-1 comment-cell"
-                    data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING">
-                    {{ comments_dict|get_comment:"W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
-
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-
-            <tr>
-                <td class="border p-1 font-medium" rowspan="4">Bulk Production</td>
-                <td class="border p-1" rowspan="4">APM/QC/TECH</td>
-                <td class="border p-1">Line Layout</td>
-                <td class="border p-1 comment-cell"
-                    data-process="Line Layout">
-                    {{ comments_dict|get_comment:"Line Layout" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border p-1"></td>
+                    <td class="border p-1 comment-cell"
+                        data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING">
+                        {{ comments_dict|get_comment:"W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
                             class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                            data-process="Line Layout"
+                            data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
                             data-style="{{ style.id }}">
                             <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
+
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border p-1"></td>
+                    <td class="border p-1 comment-cell"
+                        data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING">
+                        {{ comments_dict|get_comment:"W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                                class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                                data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
+                                data-style="{{ style.id }}">
+                                <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
+
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border p-1"></td>
+                    <td class="border p-1 comment-cell"
+                        data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING">
+                        {{ comments_dict|get_comment:"W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
+                            data-style="{{ style.id }}">
+                            <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
+
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="border p-1 font-medium" rowspan="4">Bulk Production</td>
+                    <td class="border p-1" rowspan="4">APM/QC/TECH</td>
+                    <td class="border p-1">Line Layout</td>
+                    <td class="border p-1 comment-cell"
+                        data-process="Line Layout">
+                        {{ comments_dict|get_comment:"Line Layout" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                                class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
                                 data-process="Line Layout"
                                 data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                                <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="Line Layout"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
 
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="border p-1">Machine Layout</td>
-                <td class="border p-1 comment-cell"
-                    data-process="Machine Layout">
-                    {{ comments_dict|get_comment:"Machine Layout" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="Machine Layout"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="Machine Layout"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
-
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="border p-1">Special Tools (Gage, Guide, Folder)</td>
-                <td class="border p-1 comment-cell"
-                    data-process="Special Tools (Gage, Guide, Folder)">
-                    {{ comments_dict|get_comment:"Special Tools (Gage, Guide, Folder)" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border p-1">Machine Layout</td>
+                    <td class="border p-1 comment-cell"
+                        data-process="Machine Layout">
+                        {{ comments_dict|get_comment:"Machine Layout" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
                             class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                            data-process="Special Tools (Gage, Guide, Folder)"
+                            data-process="Machine Layout"
                             data-style="{{ style.id }}">
                             <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="Machine Layout"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
+
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border p-1">Special Tools (Gage, Guide, Folder)</td>
+                    <td class="border p-1 comment-cell"
+                        data-process="Special Tools (Gage, Guide, Folder)">
+                        {{ comments_dict|get_comment:"Special Tools (Gage, Guide, Folder)" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                                class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
                                 data-process="Special Tools (Gage, Guide, Folder)"
                                 data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                                <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="Special Tools (Gage, Guide, Folder)"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
 
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="border p-1">KPM, KPI & Self Inspection</td>
-                <td class="border p-1 comment-cell"
-                    data-process="KPM, KPI & Self Inspection">
-                    {{ comments_dict|get_comment:"KPM, KPI & Self Inspection" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="KPM, KPI & Self Inspection"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="KPM, KPI & Self Inspection"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border p-1">KPM, KPI & Self Inspection</td>
+                    <td class="border p-1 comment-cell"
+                        data-process="KPM, KPI & Self Inspection">
+                        {{ comments_dict|get_comment:"KPM, KPI & Self Inspection" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="KPM, KPI & Self Inspection"
+                            data-style="{{ style.id }}">
+                            <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="KPM, KPI & Self Inspection"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
 
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
 
-            <tr>
-                <td class="border p-1 font-medium" rowspan="3">1st Output</td>
-                <td class="border p-1" rowspan="3">Individual Team</td>
-                <td class="border p-1">QC Comments</td>
-                <td class="border p-1 comment-cell"
-                    data-process="QC Comments">
-                    {{ comments_dict|get_comment:"QC Comments" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="QC Comments"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="QC Comments"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                <tr>
+                    <td class="border p-1 font-medium" rowspan="3">1st Output</td>
+                    <td class="border p-1" rowspan="3">Individual Team</td>
+                    <td class="border p-1">QC Comments</td>
+                    <td class="border p-1 comment-cell"
+                        data-process="QC Comments">
+                        {{ comments_dict|get_comment:"QC Comments" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="QC Comments"
+                            data-style="{{ style.id }}">
+                            <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="QC Comments"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
 
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="border p-1">QA Comments</td>
-                <td class="border p-1 comment-cell"
-                    data-process="QA Comments">
-                    {{ comments_dict|get_comment:"QA Comments" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="QA Comments"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="QA Comments"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border p-1">QA Comments</td>
+                    <td class="border p-1 comment-cell"
+                        data-process="QA Comments">
+                        {{ comments_dict|get_comment:"QA Comments" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="QA Comments"
+                            data-style="{{ style.id }}">
+                            <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="QA Comments"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
 
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="border p-1">TQS Comments</td>
-                <td class="border p-1 comment-cell"
-                    data-process="TQS Comments">
-                    {{ comments_dict|get_comment:"TQS Comments" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="TQS Comments"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="TQS Comments"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border p-1">TQS Comments</td>
+                    <td class="border p-1 comment-cell"
+                        data-process="TQS Comments">
+                        {{ comments_dict|get_comment:"TQS Comments" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="TQS Comments"
+                            data-style="{{ style.id }}">
+                            <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="TQS Comments"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
 
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
 
-            <tr>
-                <td class="border p-1 font-medium">Factory Inline Issue</td>
-                <td class="border p-1">APM & QC</td>
-                <td class="border p-1">Factory FeedBack & Solution</td>
-                <td class="border p-1 comment-cell"
-                    data-process="Factory FeedBack & Solution">
-                    {{ comments_dict|get_comment:"Factory FeedBack & Solution" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="Factory FeedBack & Solution"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="Factory FeedBack & Solution"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                <tr>
+                    <td class="border p-1 font-medium">Factory Inline Issue</td>
+                    <td class="border p-1">APM & QC</td>
+                    <td class="border p-1">Factory FeedBack & Solution</td>
+                    <td class="border p-1 comment-cell"
+                        data-process="Factory FeedBack & Solution">
+                        {{ comments_dict|get_comment:"Factory FeedBack & Solution" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="Factory FeedBack & Solution"
+                            data-style="{{ style.id }}">
+                            <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="Factory FeedBack & Solution"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
 
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
 
-            <tr>
-                <td class="border p-1 font-medium" rowspan="2">Customer Comments</td>
-                <td class="border p-1" rowspan="2">QA</td>
-                <td class="border p-1">Inline Comments</td>
-                <td class="border p-1 comment-cell"
-                    data-process="Inline Comments">
-                    {{ comments_dict|get_comment:"Inline Comments" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="Inline Comments"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="Inline Comments"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                <tr>
+                    <td class="border p-1 font-medium" rowspan="2">Customer Comments</td>
+                    <td class="border p-1" rowspan="2">QA</td>
+                    <td class="border p-1">Inline Comments</td>
+                    <td class="border p-1 comment-cell"
+                        data-process="Inline Comments">
+                        {{ comments_dict|get_comment:"Inline Comments" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="Inline Comments"
+                            data-style="{{ style.id }}">
+                            <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="Inline Comments"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
 
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td class="border p-1">Final Comments</td>
-                <td class="border p-1 comment-cell"
-                    data-process="Final Comments">
-                    {{ comments_dict|get_comment:"Final Comments" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="Final Comments"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="Final Comments"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border p-1">Final Comments</td>
+                    <td class="border p-1 comment-cell"
+                        data-process="Final Comments">
+                        {{ comments_dict|get_comment:"Final Comments" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="Final Comments"
+                            data-style="{{ style.id }}">
+                            <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="Final Comments"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
 
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
 
-            <tr>
-                <td class="border p-1 font-medium">Others</td>
-                <td class="border p-1"></td>
-                <td class="border p-1"></td>
-                <td class="border p-1 comment-cell"
-                    data-process="Others">
-                    {{ comments_dict|get_comment:"Others" }}
-                </td>
-                <!-- ACTION COLUMN -->
-                <td class="border p-1">
-                    <div class="flex justify-between">
-                        <!-- Add icon -->
-                        <a href="#"
-                        class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                        data-process="Others"
-                        data-style="{{ style.id }}">
-                        <i class="fa-regular fa-square-plus"></i>
-                        </a>
-                        
-                        <!-- Save button (hidden initially) -->
-                        <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                data-process="Others"
-                                data-style="{{ style.id }}">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                        </button>
+                <tr>
+                    <td class="border p-1 font-medium">Others</td>
+                    <td class="border p-1"></td>
+                    <td class="border p-1"></td>
+                    <td class="border p-1 comment-cell"
+                        data-process="Others">
+                        {{ comments_dict|get_comment:"Others" }}
+                    </td>
+                    <!-- ACTION COLUMN -->
+                    <td class="border p-1">
+                        {% if not read_only %}
+                        <div class="flex justify-between">
+                            <!-- Add icon -->
+                            <a href="#"
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="Others"
+                            data-style="{{ style.id }}">
+                            <i class="fa-regular fa-square-plus"></i>
+                            </a>
+                            
+                            <!-- Save button (hidden initially) -->
+                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
+                                    data-process="Others"
+                                    data-style="{{ style.id }}">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </button>
 
-                        <!-- Edit/Delete icons -->
-                        <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
-                            <i class="fa-regular fa-pen-to-square"></i>
-                        </a>
-                        <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
-                        onclick="return confirm('Are you sure you want to delete this entry?');">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
+                            <!-- Edit/Delete icons -->
+                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                <i class="fa-regular fa-pen-to-square"></i>
+                            </a>
+                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded"
+                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
         </tbody>
 
 
         </table>
         <!-- Submit Button -->
         <div class="col-span-2 flex justify-center mt-4 mb-8">
-            <button type="submit" 
-                class="bg-green-500 text-white font-bold py-2 px-6 rounded hover:bg-green-700">
+            {% if not read_only %}
+            <button type="submit" class="bg-green-500 text-white font-bold py-2 px-6 rounded hover:bg-green-700">
                 Save
             </button>
+            {% endif %}
+
         </div>
+        {% if read_only %}
+            <div class="flex justify-center mt-2 mb-20">
+                <a href="{% url 'style_saved_table' %}" 
+                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Back to Saved Styles
+                </a>
+            </div>
+        {% endif %}
         </form>
     </div>
 
@@ -1239,119 +1357,148 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            const uploadBtn = document.getElementById("upload-btn");
-            const uploadInput = document.getElementById("upload-image");
-            const imageList = document.getElementById("image-list");
-
             const modal = document.getElementById("image-modal");
             const modalImg = document.getElementById("modal-img");
             const closeModal = document.getElementById("close-modal");
             const downloadBtn = document.getElementById("download-btn");
 
-            // Trigger file input
-            uploadBtn.addEventListener("click", e => {
-                e.preventDefault();
-                uploadInput.click();
+            // --- Utility ---
+            function showNoImagesMessage(imageList) {
+                if (!imageList.querySelector(".no-image-msg")) {
+                    const msg = document.createElement("span");
+                    msg.className = "text-gray-500 text-sm no-image-msg";
+                    msg.textContent = "No images uploaded";
+                    msg.style.opacity = "0";
+                    imageList.appendChild(msg);
+                    setTimeout(() => { msg.style.opacity = "0.85"; }, 50);
+                }
+            }
+
+            function hideNoImagesMessage(imageList) {
+                const msg = imageList.querySelector(".no-image-msg");
+                if (msg) msg.remove();
+            }
+
+            // --- Initialize existing image lists ---
+            document.querySelectorAll(".image-list").forEach(list => {
+                if (list.querySelectorAll(".image-wrapper").length === 0) {
+                    showNoImagesMessage(list);
+                }
             });
 
-            // Upload image
-            uploadInput.addEventListener("change", function() {
-                const file = this.files[0];
-                if (!file) return;
+            {% if not read_only %}
+            // --- Handle uploads (only if editable) ---
+            document.querySelectorAll(".upload-btn").forEach(btn => {
+                btn.addEventListener("click", e => {
+                    e.preventDefault();
+                    const descId = btn.dataset.descriptionId;
+                    const input = document.getElementById(`upload-image-${descId}`);
+                    const imageList = document.getElementById(`image-list-${descId}`);
 
-                const formData = new FormData();
-                formData.append("image", file);
-                formData.append("style_id", "{{ style.id }}");
-                formData.append("description_id", "{{ description.id }}");
+                    input.click();
 
-                fetch("{% url 'upload_style_image' %}", {
-                    method: "POST",
-                    headers: { "X-CSRFToken": csrftoken },
-                    body: formData
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        // Add image to the list
-                        const wrapper = document.createElement("div");
-                        wrapper.className = "image-wrapper flex items-center gap-1 bg-gray-100 px-2 py-1 rounded";
-                        wrapper.innerHTML = `
-                            <a href="#" class="image-link text-blue-600 hover:underline" 
-                            data-url="${data.image_url}" data-name="${data.image_name}">
-                            ${data.image_name}
-                            </a>
-                            <button type="button" class="text-red-500 font-bold ml-1 delete-btn" data-id="${data.image_id}">
-                                <i class="fa-regular fa-circle-xmark"></i>
-                            </button>
-                        `;
-                        imageList.appendChild(wrapper);
+                    input.onchange = function() {
+                        const file = this.files[0];
+                        if (!file) return;
 
-                        // Reset file input so the same file can be uploaded again
-                        uploadInput.value = '';
-                    } else {
-                        alert("Failed to upload image!");
+                        const formData = new FormData();
+                        formData.append("image", file);
+                        formData.append("style_id", "{{ style.id }}");
+                        formData.append("description_id", descId);
+
+                        fetch("{% url 'upload_style_image' %}", {
+                            method: "POST",
+                            headers: { "X-CSRFToken": csrftoken },
+                            body: formData
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                hideNoImagesMessage(imageList);
+                                const wrapper = document.createElement("div");
+                                wrapper.className = "image-wrapper flex items-center gap-1 bg-gray-100 px-2 py-1 rounded";
+                                wrapper.innerHTML = `
+                                    <a href="#" class="image-link text-blue-600 hover:underline"
+                                    data-url="${data.image_url}" data-name="${data.image_name}">
+                                    ${data.image_name}
+                                    </a>
+                                    <button type="button" class="text-red-500 font-bold ml-1 delete-btn" data-id="${data.image_id}">
+                                        <i class="fa-regular fa-circle-xmark"></i>
+                                    </button>
+                                `;
+                                imageList.appendChild(wrapper);
+                                input.value = '';
+                            } else {
+                                alert("Failed to upload image!");
+                            }
+                        })
+                        .catch(() => alert("Error uploading image"));
+                    };
+                });
+            });
+            {% endif %}
+
+            // --- Handle delete and preview (works for all modes) ---
+            document.querySelectorAll(".image-list").forEach(imageList => {
+                imageList.addEventListener("click", function(e) {
+                    const deleteBtn = e.target.closest(".delete-btn");
+                    {% if not read_only %}
+                    if (deleteBtn) {
+                        e.preventDefault();
+                        const wrapper = deleteBtn.closest(".image-wrapper");
+                        const id = deleteBtn.dataset.id;
+
+                        fetch(`/delete-style-image/${id}/`, {
+                            method: "POST",
+                            headers: { "X-CSRFToken": csrftoken }
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                wrapper.remove();
+                                if (imageList.querySelectorAll(".image-wrapper").length === 0) {
+                                    showNoImagesMessage(imageList);
+                                }
+                            } else {
+                                alert("Failed to delete image: " + (data.error || "Unknown error"));
+                            }
+                        })
+                        .catch(() => alert("Network error while deleting image."));
+                        return;
+                    }
+                    {% endif %}
+
+                    // ✅ Image preview works for both read-only and edit
+                    const link = e.target.closest(".image-link");
+                    if (link) {
+                        e.preventDefault();
+                        const url = link.dataset.url;
+                        const name = link.dataset.name;
+                        modalImg.src = url;
+                        downloadBtn.href = url;
+                        downloadBtn.download = name;
+                        modal.classList.remove("hidden");
                     }
                 });
             });
 
-            // Event delegation for delete and modal preview
-            imageList.addEventListener("click", function(e) {
-                // Delete button
-                const deleteBtn = e.target.closest(".delete-btn");
-                if (deleteBtn) {
-                    e.preventDefault(); // prevent form submission
-                    const wrapper = deleteBtn.closest(".image-wrapper");
-                    if (!wrapper) return;
-
-                    const id = deleteBtn.dataset.id;
-
-                    fetch(`/delete-style-image/${id}/`, {
-                        method: "POST",
-                        headers: { "X-CSRFToken": csrftoken }
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        wrapper.remove(); // always remove visually
-                    })
-                    .catch(() => {
-                        wrapper.remove(); // fallback: remove visually if fetch fails
-                    });
-
-                    // Reset file input so same file can be re-uploaded
-                    uploadInput.value = '';
-                    return;
-                }
-
-                // Image preview modal
-                const link = e.target.closest(".image-link");
-                if (link) {
-                    e.preventDefault();
-                    const url = link.dataset.url;
-                    const name = link.dataset.name;
-                    modalImg.src = url;
-                    downloadBtn.href = url;
-                    downloadBtn.download = name;
-                    modal.classList.remove("hidden");
-                }
-            });
-
-            // Close modal
-            closeModal.addEventListener("click", () => {
+            // --- Modal close ---
+            closeModal.addEventListener("click", (e) => {
+                e.preventDefault(); // ✅ stop any default link navigation
+                e.stopPropagation(); // ✅ stop bubbling up to other handlers
                 modal.classList.add("hidden");
                 modalImg.src = "";
             });
-
-            // Click outside modal to close
-            modal.addEventListener("click", e => {
+            modal.addEventListener("click", (e) => {
                 if (e.target === modal) {
+                    e.preventDefault();
+                    e.stopPropagation();
                     modal.classList.add("hidden");
                     modalImg.src = "";
                 }
             });
+
         });
-
     </script>
-
-
 
 {% endblock %}
