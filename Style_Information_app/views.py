@@ -205,15 +205,16 @@ def save_comments(request, style_id):
             return JsonResponse({"success": False, "error": "Invalid JSON."}, status=400)
 
     return JsonResponse({"success": False, "error": "Invalid request method."}, status=405)
+
 def save_style_info(request, style_id):
     original_style = get_object_or_404(StyleInfo, id=style_id)
 
     if request.method == "POST":
-        # Create a new StyleInfo for "detail"
+        # Create a new StyleInfo record
         new_style = StyleInfo.objects.create(
             customer=original_style.customer,
             style_no=original_style.style_no,
-            source='detail',
+            source="detail",
             season=request.POST.get("season"),
             production_line=request.POST.get("production_line"),
             apm=request.POST.get("apm"),
@@ -224,8 +225,8 @@ def save_style_info(request, style_id):
             program=request.POST.get("program"),
         )
 
+        # Validate order qty
         order_qty = request.POST.get("order_qty")
-
         if not order_qty or not order_qty.isdigit() or int(order_qty) <= 0:
             messages.error(request, "Order quantity is required and must be a positive number.")
             return redirect("style_detail", style_id=style_id)
@@ -233,21 +234,39 @@ def save_style_info(request, style_id):
         new_style.order_qty = int(order_qty)
         new_style.save()
 
-        new_style.descriptions.add(*original_style.descriptions.all())
-        
-        for img in original_style.images.all():
-            StyleImage.objects.create(
-                style=new_style,
-                description=img.description,  # keep the same description
-                image_name=img.image_name,
-                image_url=img.image_url,
+        # ✅ Clone descriptions and images properly
+        for desc in original_style.descriptions.all():
+            # Create a new description linked to the new style
+            new_desc = StyleDescription.objects.create(
+                style=new_style,  # ✅ important fix
+                style_description=desc.style_description
             )
+
+            # Clone related images (if any)
+            for img in desc.images.all():
+                if not img.image_url:
+                    continue  # skip invalid images
+                if not img.style_id:
+                    continue  # skip broken old records
+
+                StyleImage.objects.create(
+                    style=new_style,
+                    description=new_desc,
+                    image_name=img.image_name,
+                    image_url=img.image_url,
+                )
+            # ✅ Clone comments too
+            for comment in original_style.comments.all():
+                Comment.objects.create(
+                    style=new_style,
+                    process=comment.process,
+                    comment_text=comment.comment_text
+                )
 
         messages.success(request, "Style information saved successfully.")
         return redirect("style_saved_table")
 
     return redirect("style_detail", style_id=style_id)
-
 
 def style_saved_table(request):
     styles = StyleInfo.objects.filter(source='detail').prefetch_related("descriptions", "customer").order_by('-created_at')
@@ -284,6 +303,16 @@ def style_saved_table(request):
     return render(request, "style_information/style_saved_table.html", {
         "customers": merged_customers
     })
+
+def style_saved_table_delete(request, style_id):
+    if request.method == "POST":
+        style = get_object_or_404(StyleInfo, id=style_id)
+        style.delete()
+        messages.success(request, f"Style '{style.style_no}' deleted successfully.")
+        return redirect('style_saved_table')
+    else:
+        messages.error(request, "Invalid request method.")
+        return redirect('style_saved_table')
 
 
 def upload_style_image(request):
@@ -342,10 +371,7 @@ def style_view(request, style_id):
 
     # Get all descriptions
     descriptions = style.descriptions.all()
-    comments_dict = {
-        desc.id: {c.process: c.comment_text for c in style.comments.filter(description=desc)}
-        for desc in descriptions
-    }
+    comments_dict = {c.process: c.comment_text for c in style.comments.all()}
     
     styles = StyleInfo.objects.all()
     customers = styles.values_list("customer__customer_name", flat=True).distinct()

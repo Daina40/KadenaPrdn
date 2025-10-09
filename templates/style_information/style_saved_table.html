@@ -7,8 +7,20 @@
 <table class="min-w-full table-auto border border-black text-sm w-full mb-[100px]"> 
     <thead class="bg-gray-300"> 
         <tr class="border p-1 text-center"> 
-            <th class="border p-1">Customer</th> 
-            <th class="border p-1">Style</th> 
+            <th class="border p-1 relative">
+                Customer
+                <span class="dropdown-icon cursor-pointer ml-2 text-blue-500">
+                    <i class="fa-regular fa-square-caret-down"></i>
+                </span>
+                <input type="text" class="filter-input absolute top-full left-0 hidden border p-1 w-full" placeholder="Search...">
+            </th> 
+            <th class="border p-1 relative">
+                Style
+                <span class="dropdown-icon cursor-pointer ml-2 text-blue-500">
+                    <i class="fa-regular fa-square-caret-down"></i>
+                </span>
+                <input type="text" class="filter-input absolute top-full left-0 hidden border p-1 w-full" placeholder="Search...">
+            </th> 
             <th class="border p-1">Style Description</th> 
             <th class="border p-1">Season</th> 
             <th class="border p-1">Program</th> 
@@ -22,7 +34,7 @@
             {% for cust in customers %}
                 {% for item in cust.styles %}
                     {% for row in item.rows %}
-                        <tr>
+                        <tr data-customer="{{ cust.customer }}" data-style="{{ item.style_no }}" data-group="{{ cust.customer }}||{{ item.style_no }}">
                             {% if forloop.first and forloop.parentloop.first %}
                                 <td class="border p-1" rowspan="{{ cust.rowspan }}">{{ cust.customer }}</td>
                             {% endif %}
@@ -31,11 +43,14 @@
                             {% endif %}
 
                             <td class="border p-1">
-                                {% if row.first_description %}
-                                    {{ row.first_description.style_description }}
-                                {% else %}
-                                    No description
-                                {% endif %}
+                                {% with desc=row.first_description|default:row.descriptions.first %}
+                                    {% if desc %}
+                                        {{ desc.style_description }}
+                                    {% else %}
+                                        No description
+                                    {% endif %}
+                                {% endwith %}
+
                             </td>
 
                             <td class="border p-1">{{ row.season }}</td>
@@ -48,16 +63,24 @@
                                     <a href="{% url 'style_view' row.id %}" class="text-[18px] text-blue-500 py-1 mr-1 rounded" title="View Style (Read Only)">
                                         <i class="fa-solid fa-eye"></i>
                                     </a>
-                                    <a href="#" class="text-[18px] text-red-600 py-1 mr-1 rounded" 
-                                        onclick="return confirm('Are you sure you want to delete this entry?');"> 
-                                        <i class="fa-solid fa-trash-can"></i> 
-                                    </a> 
-                                    <a href="#" class="text-[18px] text-yellow-500 py-1 rounded"> 
+
+                                    <form method="POST" action="{% url 'style_saved_table_delete' row.id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" 
+                                                onclick="return confirm('Are you sure you want to delete this entry?');"
+                                                class="text-[18px] text-red-600 py-1 mr-1 rounded" 
+                                                title="Delete Style">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </form>
+
+                                    <a href="#" class="text-[18px] text-yellow-500 py-1 rounded" title="Edit Style"> 
                                         <i class="fa-solid fa-pencil"></i> 
                                     </a> 
                                 </div> 
                                 {% endif %}
-                            </td> 
+                            </td>
+
                             <td class="border p-1"> 
                                 <div class="flex justify-center gap-2"> 
                                     <a href="#" class="text-[20px] text-green-500 py-1 mr-1 rounded"> 
@@ -79,5 +102,137 @@
         {% endif %}
     </tbody>
 </table> 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const table = document.querySelector("table");
+    const tbody = table.querySelector("tbody");
 
+    const customerMap = new Map();
+    const styleMap = new Map();
+    const groups = {};
+
+    (function buildInitialMaps(){
+        const rows = Array.from(tbody.querySelectorAll("tr"));
+        rows.forEach(row => {
+            const cust = row.dataset.customer;
+            const style = row.dataset.style;
+            const groupKey = row.dataset.group;
+
+            if (!groups[groupKey]) groups[groupKey] = [];
+            groups[groupKey].push(row);
+
+            const rowspanTds = Array.from(row.querySelectorAll("td[rowspan]"));
+            if (rowspanTds.length) {
+                const custTd = rowspanTds.find(td => !td.querySelector('.style-cell'));
+                const styleTd = rowspanTds.find(td => td.querySelector('.style-cell'));
+                if (custTd && cust && !customerMap.has(cust)) {
+                    customerMap.set(cust, { td: custTd, originalRow: row });
+                }
+                if (styleTd && groupKey && !styleMap.has(groupKey)) {
+                    styleMap.set(groupKey, { td: styleTd, originalRow: row });
+                }
+            }
+        });
+    })();
+    
+    // --- filtering logic ---
+    function filterTable() {
+        const inputs = Array.from(document.querySelectorAll("thead .filter-input"));
+        const filters = inputs.map(i => i.value.toLowerCase().trim());
+
+        const visibleGroupKeys = new Set();
+        for (const [groupKey, rows] of Object.entries(groups)) {
+            const [cust, style] = groupKey.split('||');
+
+            let ok = true;
+            for (let idx = 0; idx < filters.length; idx++) {
+                const filter = filters[idx];
+                if (!filter) continue;
+
+                let colMatch = false;
+                if (idx === 0) { 
+                    if (cust && cust.toLowerCase().includes(filter)) colMatch = true;
+                } else if (idx === 1) {
+                    if (style && style.toLowerCase().includes(filter)) colMatch = true;
+                } else {
+                    // (not used now) 
+                }
+
+                if (!colMatch) { ok = false; break; }
+            }
+
+            if (ok) visibleGroupKeys.add(groupKey);
+        }
+
+        for (const [groupKey, rows] of Object.entries(groups)) {
+            const show = visibleGroupKeys.has(groupKey);
+            rows.forEach(r => r.style.display = show ? "" : "none");
+        }
+
+        const customerVisibleRows = new Map();
+        for (const [groupKey, rows] of Object.entries(groups)) {
+            const [cust] = groupKey.split('||');
+            rows.forEach(r => {
+                if (r.style.display !== 'none') {
+                    if (!customerVisibleRows.has(cust)) customerVisibleRows.set(cust, []);
+                    customerVisibleRows.get(cust).push(r);
+                }
+            });
+        }
+
+        for (const [cust, info] of customerMap.entries()) {
+            const custTd = info.td;
+            const visibleRows = customerVisibleRows.get(cust) || [];
+            if (visibleRows.length === 0) {
+                custTd.style.display = 'none';
+            } else {
+                custTd.style.display = '';
+                custTd.rowSpan = visibleRows.length;
+                const firstRow = visibleRows[0];
+                firstRow.insertBefore(custTd, firstRow.firstElementChild || null);
+            }
+        }
+
+        for (const [groupKey, info] of styleMap.entries()) {
+            const styleTd = info.td;
+            const rows = groups[groupKey] || [];
+            const visibleRows = rows.filter(r => r.style.display !== 'none');
+            if (visibleRows.length === 0) {
+                styleTd.style.display = 'none';
+            } else {
+                styleTd.style.display = '';
+                styleTd.rowSpan = visibleRows.length;
+                const firstRow = visibleRows[0];
+                const ref = firstRow.children[1] || null;
+                firstRow.insertBefore(styleTd, ref);
+            }
+        }
+    }
+
+    const dropdownIcons = document.querySelectorAll(".dropdown-icon");
+    dropdownIcons.forEach(icon => {
+        icon.addEventListener("click", function (e) {
+            e.stopPropagation();
+            const input = icon.parentNode.querySelector(".filter-input");
+            if (!input) return;
+            input.classList.toggle("hidden");
+            if (!input.classList.contains("hidden")) input.focus();
+            if (input.classList.contains("hidden")) filterTable();
+        });
+    });
+
+    document.querySelectorAll(".filter-input").forEach(input => {
+        input.addEventListener("keyup", filterTable);
+    });
+
+    document.body.addEventListener('click', function(e) {
+        const item = e.target.closest('.dropdown-item');
+        if (!item) return;
+        const url = item.getAttribute('data-url');
+        if (url) window.location.href = url;
+    });
+
+    filterTable();
+});
+</script>
 {% endblock %}
