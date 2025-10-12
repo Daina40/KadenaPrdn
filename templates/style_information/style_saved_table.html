@@ -74,9 +74,11 @@
                                         </button>
                                     </form>
 
-                                    <a href="#" class="text-[18px] text-yellow-500 py-1 rounded" title="Edit Style"> 
+                                    <a href="{% url 'style_saved_table_edit' row.id %}" 
+                                        class="text-[18px] text-yellow-500 py-1 rounded" 
+                                        title="Edit Style"> 
                                         <i class="fa-solid fa-pencil"></i> 
-                                    </a> 
+                                    </a>
                                 </div> 
                                 {% endif %}
                             </td>

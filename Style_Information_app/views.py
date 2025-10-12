@@ -45,8 +45,6 @@ def style_info_add(request):
 
     return render(request, 'style_information/style_info_add.html')
 
-from django.db.models import Prefetch, Q
-
 def add_style_overview(request):
     # Fetch overview styles for rows
     overview_styles = StyleInfo.objects.filter(source='overview').prefetch_related("descriptions", "customer").all()
@@ -142,7 +140,10 @@ def style_detail(request, style_id):
     descriptions = style.descriptions.all()
 
     comments_dict = {
-        desc.id: {c.process: c.comment_text for c in style.comments.filter(description=desc)}
+        desc.id: {
+            c.process.strip(): c.comment_text
+            for c in style.comments.filter(description=desc)
+        }
         for desc in descriptions
     }
 
@@ -181,15 +182,19 @@ def save_comments(request, style_id):
     if request.method == "POST":
         try:
             data = json.loads(request.body.decode("utf-8"))
-            process = data.get("process")
-            comment_text = data.get("comment")
+            process = data.get("process", "").strip()
+            comment_text = data.get("comment", "").strip()
+            description_id = data.get("description_id")
 
-            if not process or not comment_text:
+            if not process or not comment_text or not description_id:
                 return JsonResponse({"success": False, "error": "Invalid input."}, status=400)
+
+            description = get_object_or_404(StyleDescription, id=description_id, style=style)
 
             # Save or update comment
             comment_obj, created = Comment.objects.update_or_create(
                 style=style,
+                description=description,
                 process=process,
                 defaults={"comment_text": comment_text}
             )
@@ -198,6 +203,7 @@ def save_comments(request, style_id):
                 "success": True,
                 "process": process,
                 "comment": comment_text,
+                "description_id": description.id,
                 "created": created
             })
 
@@ -206,11 +212,35 @@ def save_comments(request, style_id):
 
     return JsonResponse({"success": False, "error": "Invalid request method."}, status=405)
 
+def delete_comment(request, style_id):
+    if request.method == "POST":
+        style = get_object_or_404(StyleInfo, id=style_id)
+        try:
+            data = json.loads(request.body)
+            process = (data.get("process") or "").strip()
+            description_id = data.get("description_id")
+
+            if not process or not description_id:
+                return JsonResponse({"success": False, "error": "Invalid data"}, status=400)
+
+            description = get_object_or_404(StyleDescription, id=description_id, style=style)
+            comment = style.comments.filter(description=description, process=process).first()
+
+            if comment:
+                comment.delete()
+                return JsonResponse({"success": True})
+            else:
+                return JsonResponse({"success": False, "error": "Comment not found"}, status=404)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"success": False, "error": "Invalid JSON"}, status=400)
+
+    return JsonResponse({"success": False, "error": "Invalid request method"}, status=405)
+
 def save_style_info(request, style_id):
     original_style = get_object_or_404(StyleInfo, id=style_id)
 
     if request.method == "POST":
-        # Create a new StyleInfo record
         new_style = StyleInfo.objects.create(
             customer=original_style.customer,
             style_no=original_style.style_no,
@@ -225,7 +255,6 @@ def save_style_info(request, style_id):
             program=request.POST.get("program"),
         )
 
-        # Validate order qty
         order_qty = request.POST.get("order_qty")
         if not order_qty or not order_qty.isdigit() or int(order_qty) <= 0:
             messages.error(request, "Order quantity is required and must be a positive number.")
@@ -234,20 +263,20 @@ def save_style_info(request, style_id):
         new_style.order_qty = int(order_qty)
         new_style.save()
 
-        # ✅ Clone descriptions and images properly
+        # ✅ Map old description IDs to new ones
+        desc_map = {}
+
         for desc in original_style.descriptions.all():
-            # Create a new description linked to the new style
             new_desc = StyleDescription.objects.create(
-                style=new_style,  # ✅ important fix
+                style=new_style,
                 style_description=desc.style_description
             )
+            desc_map[desc.id] = new_desc
 
-            # Clone related images (if any)
+            # ✅ Clone images
             for img in desc.images.all():
-                if not img.image_url:
-                    continue  # skip invalid images
-                if not img.style_id:
-                    continue  # skip broken old records
+                if not img.image_url or not img.style_id:
+                    continue
 
                 StyleImage.objects.create(
                     style=new_style,
@@ -255,13 +284,19 @@ def save_style_info(request, style_id):
                     image_name=img.image_name,
                     image_url=img.image_url,
                 )
-            # ✅ Clone comments too
-            for comment in original_style.comments.all():
-                Comment.objects.create(
-                    style=new_style,
-                    process=comment.process,
-                    comment_text=comment.comment_text
-                )
+
+        # ✅ Clone related comments with correct description mapping
+        for comment in original_style.comments.all():
+            old_desc = comment.description
+            new_desc = desc_map.get(old_desc.id) if old_desc else None
+
+            Comment.objects.create(
+                style=new_style,
+                description=new_desc,
+                responsible_person=comment.responsible_person,
+                process=comment.process,
+                comment_text=comment.comment_text,
+            )
 
         messages.success(request, "Style information saved successfully.")
         return redirect("style_saved_table")
@@ -314,6 +349,67 @@ def style_saved_table_delete(request, style_id):
         messages.error(request, "Invalid request method.")
         return redirect('style_saved_table')
 
+def style_saved_table_edit(request, style_id):
+    # Get the style instance
+    style = get_object_or_404(
+        StyleInfo.objects.prefetch_related("images", "descriptions__images", "comments", "customer"),
+        id=style_id
+    )
+
+    # Handle POST — saving updated info
+    if request.method == "POST":
+        style.production_line = request.POST.get("production_line") or style.production_line
+        style.technician = request.POST.get("technician") or style.technician
+        style.season = request.POST.get("season") or style.season
+        style.order_qty = request.POST.get("order_qty") or style.order_qty
+        style.qc = request.POST.get("qc") or style.qc
+        style.apm = request.POST.get("apm") or style.apm
+        style.qa = request.POST.get("qa") or style.qa
+        style.tqs = request.POST.get("tqs") or style.tqs
+        style.program = request.POST.get("program") or style.program
+
+        style.save()
+        messages.success(request, f"Style '{style.style_no}' updated successfully.")
+        return redirect("style_saved_table")
+
+    # Prepare related data for dropdowns
+    descriptions = style.descriptions.all()
+    comments_dict = {
+        desc.id: {
+            c.process.strip(): c.comment_text
+            for c in style.comments.filter(description=desc)
+        }
+        for desc in descriptions
+    }
+
+    styles = StyleInfo.objects.all()
+    customers = styles.values_list("customer__customer_name", flat=True).distinct()
+    seasons = styles.values_list("season", flat=True).distinct()
+    lines = styles.values_list("production_line", flat=True).distinct()
+    apms = styles.values_list("apm", flat=True).distinct()
+    technicians = styles.values_list("technician", flat=True).distinct()
+    qcs = styles.values_list("qc", flat=True).distinct()
+    qas = styles.values_list("qa", flat=True).distinct()
+    tqss = styles.values_list("tqs", flat=True).distinct()
+    style_nos = styles.values_list("style_no", flat=True).distinct()
+
+    context = {
+        "style": style,
+        "descriptions": descriptions,
+        "comments_dict": comments_dict,
+        "customers": customers,
+        "seasons": seasons,
+        "lines": lines,
+        "apms": apms,
+        "technicians": technicians,
+        "qcs": qcs,
+        "qas": qas,
+        "tqss": tqss,
+        "style_nos": style_nos,
+        "read_only": False,  # ✅ editable mode
+    }
+
+    return render(request, "style_information/style_detail.html", context)
 
 def upload_style_image(request):
     if request.method == "POST" and request.FILES.get("image"):
@@ -365,14 +461,23 @@ def delete_style_image(request, image_id):
 
 def style_view(request, style_id):
     style = get_object_or_404(
-        StyleInfo.objects.prefetch_related("images", "descriptions__images", "comments", "customer"),
+        StyleInfo.objects.prefetch_related(
+            "images", "descriptions__images", "comments", "customer"
+        ),
         id=style_id
     )
 
-    # Get all descriptions
     descriptions = style.descriptions.all()
-    comments_dict = {c.process: c.comment_text for c in style.comments.all()}
-    
+
+    # ✅ Same structure as style_detail()
+    comments_dict = {
+        desc.id: {
+            c.process: c.comment_text
+            for c in style.comments.filter(description=desc)
+        }
+        for desc in descriptions
+    }
+
     styles = StyleInfo.objects.all()
     customers = styles.values_list("customer__customer_name", flat=True).distinct()
     seasons = styles.values_list("season", flat=True).distinct()
@@ -399,4 +504,5 @@ def style_view(request, style_id):
         "style_nos": style_nos,
         "read_only": True,
     }
+
     return render(request, "style_information/style_detail.html", context)
