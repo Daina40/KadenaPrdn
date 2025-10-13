@@ -172,6 +172,7 @@ def style_detail(request, style_id):
         "tqss": tqss,
         "style_nos": style_nos,
         "read_only": False,
+        "form_action": "save_style_info",
     }
     return render(request, "style_information/style_detail.html", context)
 
@@ -305,12 +306,13 @@ def save_style_info(request, style_id):
 
 def style_saved_table(request):
     styles = StyleInfo.objects.filter(source='detail').prefetch_related("descriptions", "customer").order_by('-created_at')
-    
+    print("DEBUG - Styles found:", styles.count())
     # Grouping logic stays the same
     customer_grouped = defaultdict(lambda: {"styles": {}, "rowspan": 0})
 
     for s in styles:
-        cust_name = s.customer.customer_name
+        print("→", s.id, s.style_no, s.customer, s.source)
+        cust_name = s.customer.customer_name if s.customer else "Unknown Customer"
         style_no = s.style_no
         s.first_description = s.descriptions.first()
 
@@ -368,6 +370,7 @@ def style_saved_table_edit(request, style_id):
         style.tqs = request.POST.get("tqs") or style.tqs
         style.program = request.POST.get("program") or style.program
 
+        style.source = "detail"
         style.save()
         messages.success(request, f"Style '{style.style_no}' updated successfully.")
         return redirect("style_saved_table")
@@ -406,7 +409,8 @@ def style_saved_table_edit(request, style_id):
         "qas": qas,
         "tqss": tqss,
         "style_nos": style_nos,
-        "read_only": False,  # ✅ editable mode
+        "read_only": False,
+        "form_action": "style_saved_table_edit",
     }
 
     return render(request, "style_information/style_detail.html", context)

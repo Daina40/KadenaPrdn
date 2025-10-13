@@ -29,7 +29,12 @@
                 -->
             </div>
             {% endif %}
-        <form method="POST" action="{% url 'save_style_info' style.id %}">
+        <form method="POST" 
+            action="{% if form_action == 'save_style_info' %}
+                        {% url 'save_style_info' style.id %}
+                    {% else %}
+                        {% url 'style_saved_table_edit' style.id %}
+                    {% endif %}">
             {% csrf_token %}
             <!--<pre>{{ comments_dict|safe }}</pre>-->
             <table class="excel-table w-full mb-4">
@@ -57,7 +62,12 @@
                             <select name="production_line" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
                                 <option value="">Select Line</option>
                                 {% for l in lines %}
-                                    <option value="{{ l }}">{{ l }}</option>
+                                    <option value="{{ l }}" 
+                                        {% if form_action == 'style_saved_table_edit' and style.production_line == l %}
+                                            selected
+                                        {% endif %}>
+                                        {{ l }}
+                                    </option>
                                 {% endfor %}
                             </select>
                         {% endif %}
@@ -71,7 +81,12 @@
                             <select name="technician" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
                                 <option value="">Select Technician</option>
                                 {% for t in technicians %}
-                                    <option value="{{ t }}">{{ t }}</option>
+                                    <option value="{{ t }}" 
+                                        {% if form_action == 'style_saved_table_edit' and style.technician == t %}
+                                            selected
+                                        {% endif %}>
+                                        {{ t }}
+                                    </option>
                                 {% endfor %}
                             </select>
                         {% endif %}
@@ -86,7 +101,12 @@
                             <select name="season" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
                                 <option value="">Select Season</option>
                                 {% for s in seasons %}
-                                    <option value="{{ s }}">{{ s }}</option>
+                                    <option value="{{ s }}" 
+                                        {% if form_action == 'style_saved_table_edit' and style.season == s %}
+                                            selected
+                                        {% endif %}>
+                                        {{ s }}
+                                    </option>
                                 {% endfor %}
                             </select>
                         {% endif %}
@@ -106,7 +126,12 @@
                             <select name="qc" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
                                 <option value="">Select QC</option>
                                 {% for qc in qcs %}
-                                    <option value="{{ qc }}">{{ qc }}</option>
+                                    <option value="{{ qc }}" 
+                                        {% if form_action == 'style_saved_table_edit' and style.qc == qc %}
+                                            selected
+                                        {% endif %}>
+                                        {{ qc }}
+                                    </option>
                                 {% endfor %}
                             </select>
                         {% endif %}
@@ -123,26 +148,38 @@
                             <input type="text" class="form-control bg-gray-100 cursor-text" value="{{ style.apm }}" readonly>
                         {% else %}
                             <select name="apm" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
-                                <option>Select APM</option>
+                                <option value="">Select APM</option>
                                 {% for apm in apms %}
-                                    <option value="{{ apm }}">{{ apm }}</option>
+                                    <option value="{{ apm }}" 
+                                        {% if form_action == 'style_saved_table_edit' and style.apm == apm %}
+                                            selected
+                                        {% endif %}>
+                                        {{ apm }}
+                                    </option>
                                 {% endfor %}
                             </select>
                         {% endif %}
                     </td>
+
                     <td class="label font-medium">QA:</td>
                     <td>
                         {% if read_only %}
                             <input type="text" class="form-control bg-gray-100 cursor-text" value="{{ style.qa }}" readonly>
                         {% else %}
                             <select name="qa" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
-                                <option>Select QA</option>
+                                <option value="">Select QA</option>
                                 {% for qa in qas %}
-                                    <option value="{{ qa }}">{{ qa }}</option>
+                                    <option value="{{ qa }}" 
+                                        {% if form_action == 'style_saved_table_edit' and style.qa == qa %}
+                                        selected
+                                    {% endif %}>
+                                    {{ qa }}
+                                </option>
                                 {% endfor %}
                             </select>
                         {% endif %}
                     </td>
+
                 </tr>
                 <tr>
                     <td class="label font-medium">Style Description:</td>
@@ -161,9 +198,14 @@
                             <input type="text" class="form-control bg-gray-100 cursor-text" value="{{ style.tqs }}" readonly>
                         {% else %}
                             <select name="tqs" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
-                                <option>Select TQS</option>
+                                <option value="">Select TQS</option>
                                 {% for tqs in tqss %}
-                                    <option value="{{ tqs }}">{{ tqs }}</option>
+                                    <option value="{{ tqs }}" 
+                                        {% if form_action == 'style_saved_table_edit' and style.tqs == tqs %}
+                                            selected
+                                        {% endif %}>
+                                        {{ tqs }}
+                                    </option>
                                 {% endfor %}
                             </select>
                         {% endif %}
@@ -1613,14 +1655,26 @@
 
         </table>
         <!-- Submit Button -->
-        <div class="col-span-2 flex justify-center mt-4 mb-8">
-            {% if not read_only %}
-            <button type="submit" class="bg-green-500 text-white font-bold py-2 px-6 rounded hover:bg-green-700">
-                Save
-            </button>
-            {% endif %}
+        {% if not read_only %}
+            <div class="flex justify-center gap-3 mt-4 mb-20">
+                {% if form_action == 'save_style_info' %}
+                    <!-- Show only Save as New -->
+                    <button type="submit"
+                            class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                            onclick="setAction('{% url 'save_style_info' style.id %}')">
+                        Save as New Style
+                    </button>
+                {% elif form_action == 'style_saved_table_edit' %}
+                    <!-- Show only Update Existing -->
+                    <button type="submit"
+                            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                            onclick="setAction('{% url 'style_saved_table_edit' style.id %}')">
+                        Update Existing Style
+                    </button>
+                {% endif %}
+            </div>
+        {% endif %}
 
-        </div>
         {% if read_only %}
             <div class="flex justify-center mt-2 mb-20">
                 <a href="{% url 'style_saved_table' %}" 
@@ -1973,6 +2027,10 @@
             });
 
         });
+
+        function setAction(url) {
+            document.getElementById('styleForm').action = url;
+        }
     </script>
 
 {% endblock %}
