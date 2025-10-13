@@ -17,18 +17,19 @@
             <h1 class="text-2xl text-green-500 font-bold mb-6 text-center">
                 {% if read_only %}View Saved Style (Read Only){% else %}Summary of Style Information{% endif %}
             </h1>
-            {% if not read_only %}
-            <div class="flex justify-left my-2">
-                <a href="{% url "style_info_add" %}" class="bg-blue-800 text-white px-2 py-1 text-[14px] rounded font-bold hover:bg-blue-900">
-                    Customer Add
-                </a>
-                <!--
-                <a href="#" class="bg-blue-800 text-white px-2 py-1 ml-3 text-[14px] rounded font-bold hover:bg-blue-900" data-button="download_excel">
+            <div class="flex justify-end my-2">
+                {% if not read_only %}
+                    <a href="{% url "style_info_add" %}" class="bg-blue-800 text-white px-2 py-1 text-[14px] rounded font-bold hover:bg-blue-900">
+                        Customer Add
+                    </a>
+                {% else %}
+
+                <a href="{% url 'download_style_excel' style.id %}" class="bg-blue-800 text-white px-2 py-1 ml-3 text-[14px] rounded font-bold hover:bg-blue-900" data-button="download_excel">
                     Download Excel
                 </a>
-                -->
+                {% endif %}
             </div>
-            {% endif %}
+
         <form method="POST" 
             action="{% if form_action == 'save_style_info' %}
                         {% url 'save_style_info' style.id %}
@@ -59,7 +60,7 @@
                         {% if read_only %}
                             <input type="text" class="form-control bg-gray-100 cursor-text" value="{{ style.production_line }}" readonly>
                         {% else %}
-                            <select name="production_line" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                            <select name="production_line" class="form-select selectpicker" required data-live-search="true" data-width="100%" data-size="5">
                                 <option value="">Select Line</option>
                                 {% for l in lines %}
                                     <option value="{{ l }}" 
@@ -78,7 +79,7 @@
                         {% if read_only %}
                             <input type="text" class="form-control bg-gray-100 cursor-text" value="{{ style.technician }}" readonly>
                         {% else %}
-                            <select name="technician" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                            <select name="technician" class="form-select selectpicker" required data-live-search="true" data-width="100%" data-size="5">
                                 <option value="">Select Technician</option>
                                 {% for t in technicians %}
                                     <option value="{{ t }}" 
@@ -98,7 +99,7 @@
                         {% if read_only %}
                             <input type="text" class="form-control bg-gray-100 cursor-text" value="{{ style.season }}" readonly>
                         {% else %}
-                            <select name="season" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                            <select name="season" class="form-select selectpicker" required data-live-search="true" data-width="100%" data-size="5">
                                 <option value="">Select Season</option>
                                 {% for s in seasons %}
                                     <option value="{{ s }}" 
@@ -123,7 +124,7 @@
                         {% if read_only %}
                             <input type="text" class="form-control bg-gray-100 cursor-text" value="{{ style.qc }}" readonly>
                         {% else %}
-                            <select name="qc" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                            <select name="qc" class="form-select selectpicker" required data-live-search="true" data-width="100%" data-size="5">
                                 <option value="">Select QC</option>
                                 {% for qc in qcs %}
                                     <option value="{{ qc }}" 
@@ -147,7 +148,7 @@
                         {% if read_only %}
                             <input type="text" class="form-control bg-gray-100 cursor-text" value="{{ style.apm }}" readonly>
                         {% else %}
-                            <select name="apm" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                            <select name="apm" class="form-select selectpicker" required data-live-search="true" data-width="100%" data-size="5">
                                 <option value="">Select APM</option>
                                 {% for apm in apms %}
                                     <option value="{{ apm }}" 
@@ -166,7 +167,7 @@
                         {% if read_only %}
                             <input type="text" class="form-control bg-gray-100 cursor-text" value="{{ style.qa }}" readonly>
                         {% else %}
-                            <select name="qa" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                            <select name="qa" class="form-select selectpicker" required data-live-search="true" data-width="100%" data-size="5">
                                 <option value="">Select QA</option>
                                 {% for qa in qas %}
                                     <option value="{{ qa }}" 
@@ -197,7 +198,7 @@
                         {% if read_only %}
                             <input type="text" class="form-control bg-gray-100 cursor-text" value="{{ style.tqs }}" readonly>
                         {% else %}
-                            <select name="tqs" class="form-select selectpicker" data-live-search="true" data-width="100%" data-size="5">
+                            <select name="tqs" class="form-select selectpicker" required data-live-search="true" data-width="100%" data-size="5">
                                 <option value="">Select TQS</option>
                                 {% for tqs in tqss %}
                                     <option value="{{ tqs }}" 
@@ -214,7 +215,7 @@
                 <tr>
                     <td class="label font-medium">Program:</td>
                     <td>
-                        <textarea name="program" class="form-control" placeholder="Enter program details">{{ style.program }}</textarea>
+                        <textarea name="program" class="form-control" required placeholder="Enter program details">{{ style.program|default:"" }}</textarea>
                     </td>
                     {% for description in descriptions %}
                         <td></td>
@@ -679,10 +680,10 @@
                         {% endif %}
                     </td>
                 </tr>
-
+                
                 <tr>
-                    <td class="border p-1 font-medium" rowspan="3">SMS Notes & Risk Analysis</td>
-                    <td class="border p-1" rowspan="3">QC & QA/CS</td>
+                    <td class="border p-1 font-medium">SMS Notes & Risk Analysis</td>
+                    <td class="border p-1">QC & QA/CS</td>
                     <td class="border p-1"></td>
                     <td class="border p-1 comment-cell" data-process="QC & QA/CS" data-description-id="{{ desc.id }}">
                         {{ comments_dict|get_comment_for_desc:desc.id|get_comment:"QC & QA/CS" }}
@@ -693,60 +694,11 @@
                         <div class="flex justify-between">
                             <!-- Add icon -->
                             <a href="#"
-                                class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                                data-process="QC & QA/CS"
-                                data-style="{{ style.id }}"
-                                data-description-id="{{ desc.id }}">
-                                <i class="fa-regular fa-square-plus"></i>
-                            </a>
-                            
-                            <!-- Save button (hidden initially) -->
-                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                    data-process="QC & QA/CS"
-                                    data-style="{{ style.id }}"
-                                    data-description-id="{{ desc.id }}">
-                                <i class="fa-solid fa-floppy-disk"></i>
-                            </button>
-
-                            <!-- Edit/Delete icons -->
-                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded edit-comment-btn"
-                                data-process="QC & QA/CS"
-                                data-style="{{ style.id }}"
-                                data-description-id="{{ desc.id }}">
-                                <i class="fa-regular fa-pen-to-square"></i>
-                            </a>
-                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-edit-btn hidden"
-                                    data-process="QC & QA/CS"
-                                    data-style="{{ style.id }}"
-                                    data-description-id="{{ desc.id }}">
-                                <i class="fa-solid fa-floppy-disk"></i>
-                            </button>
-                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded delete-comment-btn"
-                                data-process="QA & QA/CS"
-                                data-description-id="{{ desc.id }}"
-                                data-style="{{ style.id }}">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </a>
-                        </div>
-                        {% endif %}
-                    </td>
-                </tr>
-                <tr>
-                    <td class="border p-1"></td>
-                    <td class="border p-1 comment-cell" data-process="QC & QA/CS" data-description-id="{{ desc.id }}">
-                        {{ comments_dict|get_comment_for_desc:desc.id|get_comment:"QC & QA/CS" }}
-                    </td>
-                    <!-- ACTION COLUMN -->
-                    <td class="border p-1">
-                        {% if not read_only %}
-                        <div class="flex justify-between">
-                            <!-- Add icon -->
-                            <a href="#"
-                                class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                                data-process="QC & QA/CS"
-                                data-style="{{ style.id }}"
-                                data-description-id="{{ desc.id }}">
-                                <i class="fa-regular fa-square-plus"></i>
+                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
+                            data-process="QC & QA/CS"
+                            data-style="{{ style.id }}"
+                            data-description-id="{{ desc.id }}">
+                            <i class="fa-regular fa-square-plus"></i>
                             </a>
                             
                             <!-- Save button (hidden initially) -->
@@ -779,55 +731,6 @@
                         </div>
                         {% endif %}
                     </td>
-                </tr>
-                <tr>
-                    <td class="border p-1"></td>
-                    <td class="border p-1 comment-cell" data-process="QC & QA/CS" data-description-id="{{ desc.id }}">
-                        {{ comments_dict|get_comment_for_desc:desc.id|get_comment:"QC & QA/CS" }}
-                    </td>
-                    <!-- ACTION COLUMN -->
-                    <td class="border p-1">
-                        {% if not read_only %}
-                        <div class="flex justify-between">
-                            <!-- Add icon -->
-                            <a href="#"
-                                class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                                data-process="QC & QA/CS"
-                                data-style="{{ style.id }}"
-                                data-description-id="{{ desc.id }}">
-                                <i class="fa-regular fa-square-plus"></i>
-                            </a>
-                            
-                            <!-- Save button (hidden initially) -->
-                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                    data-process="QC & QA/CS"
-                                    data-style="{{ style.id }}"
-                                    data-description-id="{{ desc.id }}">
-                                <i class="fa-solid fa-floppy-disk"></i>
-                            </button>
-
-                            <!-- Edit/Delete icons -->
-                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded edit-comment-btn"
-                                data-process="QC & QA/CS"
-                                data-style="{{ style.id }}"
-                                data-description-id="{{ desc.id }}">
-                                <i class="fa-regular fa-pen-to-square"></i>
-                            </a>
-                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-edit-btn hidden"
-                                    data-process="Fabric issue"
-                                    data-style="{{ style.id }}"
-                                    data-description-id="{{ desc.id }}">
-                                <i class="fa-solid fa-floppy-disk"></i>
-                            </button>
-                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded delete-comment-btn"
-                                data-process="QC & QA/CS"
-                                data-description-id="{{ desc.id }}"
-                                data-style="{{ style.id }}">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </a>
-                        </div>
-                    </td>
-                    {% endif %}
                 </tr>
 
                 <tr>
@@ -883,8 +786,8 @@
                 </tr>
 
                 <tr>
-                    <td class="border p-1 font-medium" rowspan="4">PP meeting Special attention(SMS review, Size set review, Pattern review, Risk point review & Customer comments review</td>
-                    <td class="border p-1" rowspan="4">W/House/QC/CS/APM/TECH/<br>Mechanic/QA/PATTERN/CUTTING</td>
+                    <td class="border p-1 font-medium">PP meeting Special attention(SMS review, Size set review, Pattern review, Risk point review & Customer comments review</td>
+                    <td class="border p-1">W/House/QC/CS/APM/TECH/<br>Mechanic/QA/PATTERN/CUTTING</td>
                     <td class="border p-1"></td>
                     <td class="border p-1 comment-cell"
                         data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" data-description-id="{{ desc.id }}">
@@ -934,156 +837,7 @@
                         {% endif %}
                     </td>
                 </tr>
-                <tr>
-                    <td class="border p-1"></td>
-                    <td class="border p-1 comment-cell"
-                        data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" data-description-id="{{ desc.id }}">
-                        {{ comments_dict|get_comment_for_desc:desc.id|get_comment:"W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" }}
-                    </td>
-                    <!-- ACTION COLUMN -->
-                    <td class="border p-1">
-                        {% if not read_only %}
-                        <div class="flex justify-between">
-                            <!-- Add icon -->
-                            <a href="#"
-                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                            data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                            data-style="{{ style.id }}"
-                            data-description-id="{{ desc.id }}">
-                            <i class="fa-regular fa-square-plus"></i>
-                            </a>
-                            
-                            <!-- Save button (hidden initially) -->
-                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                    data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                                    data-style="{{ style.id }}"
-                                    data-description-id="{{ desc.id }}">
-                                <i class="fa-solid fa-floppy-disk"></i>
-                            </button>
-
-                            <!-- Edit/Delete icons -->
-                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded edit-comment-btn"
-                                data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                                data-style="{{ style.id }}"
-                                data-description-id="{{ desc.id }}">
-                                <i class="fa-regular fa-pen-to-square"></i>
-                            </a>
-                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-edit-btn hidden"
-                                    data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                                    data-style="{{ style.id }}"
-                                    data-description-id="{{ desc.id }}">
-                                <i class="fa-solid fa-floppy-disk"></i>
-                            </button>
-                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded delete-comment-btn"
-                                data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                                data-description-id="{{ desc.id }}"
-                                data-style="{{ style.id }}">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </a>
-                        </div>
-                        {% endif %}
-                    </td>
-                </tr>
-                <tr>
-                    <td class="border p-1"></td>
-                    <td class="border p-1 comment-cell"
-                        data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" data-description-id="{{ desc.id }}">
-                        {{ comments_dict|get_comment_for_desc:desc.id|get_comment:"W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" }}
-                    </td>
-                    <!-- ACTION COLUMN -->
-                    <td class="border p-1">
-                        {% if not read_only %}
-                        <div class="flex justify-between">
-                            <!-- Add icon -->
-                            <a href="#"
-                                class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                                data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                                data-style="{{ style.id }}"
-                                data-description-id="{{ desc.id }}">
-                                <i class="fa-regular fa-square-plus"></i>
-                            </a>
-                            
-                            <!-- Save button (hidden initially) -->
-                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                    data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                                    data-style="{{ style.id }}"
-                                    data-description-id="{{ desc.id }}">
-                                <i class="fa-solid fa-floppy-disk"></i>
-                            </button>
-
-                            <!-- Edit/Delete icons -->
-                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded edit-comment-btn"
-                                data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                                data-style="{{ style.id }}"
-                                data-description-id="{{ desc.id }}">
-                                <i class="fa-regular fa-pen-to-square"></i>
-                            </a>
-                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-edit-btn hidden"
-                                    data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                                    data-style="{{ style.id }}"
-                                    data-description-id="{{ desc.id }}">
-                                <i class="fa-solid fa-floppy-disk"></i>
-                            </button>
-                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded delete-comment-btn"
-                                data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                                data-description-id="{{ desc.id }}"
-                                data-style="{{ style.id }}">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </a>
-                        </div>
-                        {% endif %}
-                    </td>
-                </tr>
-                <tr>
-                    <td class="border p-1"></td>
-                    <td class="border p-1 comment-cell"
-                        data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" data-description-id="{{ desc.id }}">
-                        {{ comments_dict|get_comment_for_desc:desc.id|get_comment:"W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING" }}
-                    </td>
-                    <!-- ACTION COLUMN -->
-                    <td class="border p-1">
-                        {% if not read_only %}
-                        <div class="flex justify-between">
-                            <!-- Add icon -->
-                            <a href="#"
-                            class="bg-blue-500 text-white px-2 py-1 mr-1 rounded add-comment-btn"
-                            data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                            data-style="{{ style.id }}"
-                            data-description-id="{{ desc.id }}">
-                            <i class="fa-regular fa-square-plus"></i>
-                            </a>
-                            
-                            <!-- Save button (hidden initially) -->
-                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-comment-btn hidden"
-                                    data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                                    data-style="{{ style.id }}"
-                                    data-description-id="{{ desc.id }}">
-                                <i class="fa-solid fa-floppy-disk"></i>
-                            </button>
-
-                            <!-- Edit/Delete icons -->
-                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded edit-comment-btn"
-                                data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                                data-style="{{ style.id }}"
-                                data-description-id="{{ desc.id }}">
-                                <i class="fa-regular fa-pen-to-square"></i>
-                            </a>
-                            <button class="bg-gray-200 text-green-500 px-2 py-1 mr-1 rounded save-edit-btn hidden"
-                                    data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                                    data-style="{{ style.id }}"
-                                    data-description-id="{{ desc.id }}">
-                                <i class="fa-solid fa-floppy-disk"></i>
-                            </button>
-                            <a href="#" class="bg-red-600 text-white px-2 py-1 rounded delete-comment-btn"
-                                data-process="W/House_QC_CS_APM_TECH_Mechanic_QA_PATTERN_CUTTING"
-                                data-description-id="{{ desc.id }}"
-                                data-style="{{ style.id }}">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </a>
-                        </div>
-                        {% endif %}
-                    </td>
-                </tr>
+                
 
                 <tr>
                     <td class="border p-1 font-medium" rowspan="4">Bulk Production</td>

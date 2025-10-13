@@ -19,4 +19,6 @@ urlpatterns = [
     
     path('style_view/<int:style_id>/', views.style_view, name='style_view'),
 
+    path('download_style_excel/<int:style_id>/', views.download_style_excel, name='download_style_excel'),
+
 ]

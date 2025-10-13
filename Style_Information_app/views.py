@@ -1,6 +1,7 @@
 import json
 from django.http import JsonResponse
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
+from openpyxl import Workbook
 from Style_Information_app.models import Customer, StyleInfo, StyleDescription, Comment, StyleImage
 from collections import defaultdict
 from django.contrib import messages
@@ -46,33 +47,27 @@ def style_info_add(request):
     return render(request, 'style_information/style_info_add.html')
 
 def add_style_overview(request):
-    # Fetch overview styles for rows
     overview_styles = StyleInfo.objects.filter(source='overview').prefetch_related("descriptions", "customer").all()
 
-    # Fetch all detail styles (just for merging their descriptions)
     detail_styles = StyleInfo.objects.filter(source='detail').prefetch_related("descriptions")
 
-    # Map: style_no -> set of descriptions from detail records
     detail_desc_map = defaultdict(set)
     for d in detail_styles:
         for desc in d.descriptions.all():
             detail_desc_map[d.style_no].add(desc)
 
-    # Group overview data
     customer_grouped = defaultdict(lambda: {"styles": {}, "rowspan": 0})
 
     for s in overview_styles:
         cust = s.customer.customer_name
         style_no = s.style_no
 
-        # group by style inside each customer
         if style_no not in customer_grouped[cust]["styles"]:
             customer_grouped[cust]["styles"][style_no] = {
                 "rows": [],
                 "descriptions": {},
             }
 
-        # deduplicate rows
         row_key = (
             s.season,
             s.production_line,
@@ -97,13 +92,11 @@ def add_style_overview(request):
             customer_grouped[cust]["styles"][style_no]["rows"].append(s)
             customer_grouped[cust]["rowspan"] += 1
 
-        # ✅ Collect distinct descriptions from overview and detail
         combined_descs = list(s.descriptions.all()) + list(detail_desc_map.get(style_no, []))
         for d in combined_descs:
             if d.style_description not in customer_grouped[cust]["styles"][style_no]["descriptions"]:
                 customer_grouped[cust]["styles"][style_no]["descriptions"][d.style_description] = d
 
-    # Prepare for template
     merged_customers = []
     for customer, cdata in customer_grouped.items():
         styles_list = []
@@ -124,8 +117,6 @@ def add_style_overview(request):
         "customers": merged_customers
     })
 
-
-# Delete StyleInfo
 def delete_add_style_overview(request, id):
     style = get_object_or_404(StyleInfo, id=id)
     style.delete()
@@ -192,7 +183,6 @@ def save_comments(request, style_id):
 
             description = get_object_or_404(StyleDescription, id=description_id, style=style)
 
-            # Save or update comment
             comment_obj, created = Comment.objects.update_or_create(
                 style=style,
                 description=description,
@@ -264,7 +254,6 @@ def save_style_info(request, style_id):
         new_style.order_qty = int(order_qty)
         new_style.save()
 
-        # ✅ Map old description IDs to new ones
         desc_map = {}
 
         for desc in original_style.descriptions.all():
@@ -274,7 +263,6 @@ def save_style_info(request, style_id):
             )
             desc_map[desc.id] = new_desc
 
-            # ✅ Clone images
             for img in desc.images.all():
                 if not img.image_url or not img.style_id:
                     continue
@@ -286,7 +274,6 @@ def save_style_info(request, style_id):
                     image_url=img.image_url,
                 )
 
-        # ✅ Clone related comments with correct description mapping
         for comment in original_style.comments.all():
             old_desc = comment.description
             new_desc = desc_map.get(old_desc.id) if old_desc else None
@@ -306,8 +293,6 @@ def save_style_info(request, style_id):
 
 def style_saved_table(request):
     styles = StyleInfo.objects.filter(source='detail').prefetch_related("descriptions", "customer").order_by('-created_at')
-    print("DEBUG - Styles found:", styles.count())
-    # Grouping logic stays the same
     customer_grouped = defaultdict(lambda: {"styles": {}, "rowspan": 0})
 
     for s in styles:
@@ -352,13 +337,11 @@ def style_saved_table_delete(request, style_id):
         return redirect('style_saved_table')
 
 def style_saved_table_edit(request, style_id):
-    # Get the style instance
     style = get_object_or_404(
         StyleInfo.objects.prefetch_related("images", "descriptions__images", "comments", "customer"),
         id=style_id
     )
 
-    # Handle POST — saving updated info
     if request.method == "POST":
         style.production_line = request.POST.get("production_line") or style.production_line
         style.technician = request.POST.get("technician") or style.technician
@@ -375,7 +358,6 @@ def style_saved_table_edit(request, style_id):
         messages.success(request, f"Style '{style.style_no}' updated successfully.")
         return redirect("style_saved_table")
 
-    # Prepare related data for dropdowns
     descriptions = style.descriptions.all()
     comments_dict = {
         desc.id: {
@@ -421,11 +403,9 @@ def upload_style_image(request):
         description_id = request.POST.get("description_id")
         file = request.FILES["image"]
 
-        # ✅ Save to media folder
         file_path = default_storage.save(os.path.join("style_images", file.name), file)
         file_url = default_storage.url(file_path)
 
-        # ✅ Save to database (linked to style + description)
         style = StyleInfo.objects.get(id=style_id)
         description = StyleDescription.objects.get(id=description_id)
 
@@ -449,14 +429,12 @@ def delete_style_image(request, image_id):
     if request.method == "POST":
         try:
             image = StyleImage.objects.get(id=image_id)
-            
-            # ✅ Delete the image file from storage (optional but clean)
+
             if image.image_url:
                 file_path = image.image_url.replace("/media/", "")
                 if default_storage.exists(file_path):
                     default_storage.delete(file_path)
 
-            # ✅ Delete from database
             image.delete()
             return JsonResponse({"success": True})
         except StyleImage.DoesNotExist:
@@ -473,7 +451,6 @@ def style_view(request, style_id):
 
     descriptions = style.descriptions.all()
 
-    # ✅ Same structure as style_detail()
     comments_dict = {
         desc.id: {
             c.process: c.comment_text
@@ -510,3 +487,55 @@ def style_view(request, style_id):
     }
 
     return render(request, "style_information/style_detail.html", context)
+
+
+def download_style_excel(request, style_id):
+    style = get_object_or_404(
+        StyleInfo.objects.prefetch_related("descriptions", "comments", "customer"),
+        id=style_id
+    )
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Style Details"
+
+    ws.append(["Field", "Value"])
+
+    ws.append(["Customer", style.customer.customer_name])
+    ws.append(["Style No", style.style_no])
+    ws.append(["Season", style.season or ""])
+    ws.append(["Production Line", style.production_line or ""])
+    ws.append(["Order Qty", style.order_qty or ""])
+    ws.append(["Program", style.program or ""])
+    ws.append(["APM", style.apm or ""])
+    ws.append(["Technician", style.technician or ""])
+    ws.append(["QC", style.qc or ""])
+    ws.append(["QA", style.qa or ""])
+    ws.append(["TQS", style.tqs or ""])
+    ws.append(["Created At", style.created_at.strftime("%Y-%m-%d")])
+
+    ws.append([])
+    ws.append(["Descriptions"])
+    for desc in style.descriptions.all():
+        ws.append([desc.style_description])
+
+        comments = style.comments.filter(description=desc)
+        if comments.exists():
+            ws.append(["", "Process", "Responsible Person", "Comment"])
+            for c in comments:
+                ws.append([
+                    "", 
+                    c.process or "", 
+                    c.responsible_person or "", 
+                    c.comment_text or ""
+                ])
+        ws.append([])
+
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    filename = f"{style.customer.customer_name}_{style.style_no}.xlsx"
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+
+    wb.save(response)
+    return response
