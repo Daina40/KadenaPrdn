@@ -3,7 +3,7 @@
 {% block content %}
     <div class="mt-2 mb-1 w-full px-[300px]">
         <h1 class="text-2xl text-green-500 font-bold mb-6 text-center">Add Style Information</h1>
-        <form action="{% url 'style_info_add' %}" method="post" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form action="{% if edit %}{% url 'edit_add_style_overview' style_id %}{% else %}{% url 'style_info_add' %}{% endif %}" method="post" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             {% csrf_token %}
             <!-- customer -->
             <div>
@@ -89,7 +89,11 @@
             <div class="col-span-2 flex justify-center mt-4 mb-8">
                 <button type="submit" 
                         class="bg-green-500 text-white font-bold py-2 px-6 rounded hover:bg-green-700">
-                    Submit
+                    {% if edit %}
+                        Update  
+                    {% else %}
+                        Submit
+                    {% endif %}
                 </button>
             </div>
         </form>

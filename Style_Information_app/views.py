@@ -2,6 +2,9 @@ import json
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from openpyxl import Workbook
+import openpyxl
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.utils import get_column_letter
 from Style_Information_app.models import Customer, StyleInfo, StyleDescription, Comment, StyleImage
 from collections import defaultdict
 from django.contrib import messages
@@ -121,6 +124,52 @@ def delete_add_style_overview(request, id):
     style = get_object_or_404(StyleInfo, id=id)
     style.delete()
     return redirect('add_style_overview')
+
+def edit_add_style_overview(request, id):
+    style = get_object_or_404(StyleInfo, id=id)
+
+    if request.method == "POST":
+        style.customer.customer_name = request.POST.get("customer_name", "").upper()
+        style.style_no = request.POST.get("style_no", "").upper()
+        style.season = request.POST.get("season", "").upper()
+        style.production_line = request.POST.get("production_line", "").upper()
+        style.apm = request.POST.get("apm", "").capitalize()
+        style.technician = request.POST.get("technician", "").capitalize()
+        style.qc = request.POST.get("qc", "").capitalize()
+        style.qa = request.POST.get("qa", "").capitalize()
+        style.tqs = request.POST.get("tqs", "").capitalize()
+
+        style.customer.save()
+        style.save()
+
+        # Update or create description if provided
+        style_desc = request.POST.get("style_description", "")
+        if style_desc:
+            StyleDescription.objects.update_or_create(
+                style=style,
+                defaults={"style_description": style_desc}
+            )
+
+        return redirect("add_style_overview")
+
+    # Pre-fill existing values in context
+    context = {
+        "edit": True,
+        "customer_name": style.customer.customer_name,
+        "style_no": style.style_no,
+        "season": style.season,
+        "production_line": style.production_line,
+        "apm": style.apm,
+        "technician": style.technician,
+        "qc": style.qc,
+        "qa": style.qa,
+        "tqs": style.tqs,
+        "style_id": style.id,
+        "style_description": style.descriptions.first().style_description if style.descriptions.exists() else "",
+    }
+
+    return render(request, "style_information/style_info_add.html", context)
+
 
 def style_detail(request, style_id):
     style = get_object_or_404(
@@ -488,54 +537,196 @@ def style_view(request, style_id):
 
     return render(request, "style_information/style_detail.html", context)
 
-
+def set_border(ws, start_row, start_col, end_row, end_col, border):
+    for row in range(start_row, end_row + 1):
+        for col in range(start_col, end_col + 1):
+            ws.cell(row=row, column=col).border = border
+            
 def download_style_excel(request, style_id):
     style = get_object_or_404(
-        StyleInfo.objects.prefetch_related("descriptions", "comments", "customer"),
+        StyleInfo.objects.prefetch_related("descriptions__comments", "customer"),
         id=style_id
     )
 
-    wb = Workbook()
+    wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Style Details"
+    ws.title = "Summary of style information"
 
-    ws.append(["Field", "Value"])
+    # ---- Styles ----
+    bold = Font(bold=True)
+    center = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    left = Alignment(horizontal="left", vertical="center", wrap_text=True)
+    right = Alignment(horizontal="right", vertical="center", wrap_text=True)
+    thin_border = Border(
+        left=Side(style="thin"),
+        right=Side(style="thin"),
+        top=Side(style="thin"),
+        bottom=Side(style="thin")
+    )
 
-    ws.append(["Customer", style.customer.customer_name])
-    ws.append(["Style No", style.style_no])
-    ws.append(["Season", style.season or ""])
-    ws.append(["Production Line", style.production_line or ""])
-    ws.append(["Order Qty", style.order_qty or ""])
-    ws.append(["Program", style.program or ""])
-    ws.append(["APM", style.apm or ""])
-    ws.append(["Technician", style.technician or ""])
-    ws.append(["QC", style.qc or ""])
-    ws.append(["QA", style.qa or ""])
-    ws.append(["TQS", style.tqs or ""])
-    ws.append(["Created At", style.created_at.strftime("%Y-%m-%d")])
+    # ---- Sheet column widths ----
+    ws.column_dimensions["A"].width = 22
+    ws.column_dimensions["B"].width = 25
+    ws.column_dimensions["C"].width = 20
+    ws.column_dimensions["D"].width = 20
+    ws.column_dimensions["E"].width = 20
+    ws.column_dimensions["F"].width = 12
+    ws.column_dimensions["G"].width = 15
 
-    ws.append([])
-    ws.append(["Descriptions"])
-    for desc in style.descriptions.all():
-        ws.append([desc.style_description])
+    # ---- Header (exact layout like template) ----
+    # Merge main title
+    ws.merge_cells("A2:F2")
+    ws["A2"] = "Summary of style information"
+    ws["A2"].font = Font(bold=True, size=14)
+    ws["A2"].alignment = center
 
-        comments = style.comments.filter(description=desc)
-        if comments.exists():
-            ws.append(["", "Process", "Responsible Person", "Comment"])
-            for c in comments:
-                ws.append([
-                    "", 
-                    c.process or "", 
-                    c.responsible_person or "", 
-                    c.comment_text or ""
-                ])
-        ws.append([])
+    # Date (right side)
+    ws["E3"] = "Date:"
+    ws["F3"] = style.created_at.strftime("%d-%b-%Y") if style.created_at else ""
+    ws["E3"].font = bold
+    ws["E3"].alignment = right
+    ws["F3"].alignment = center
 
+    # ---- Information Section (left and right grouping) ----
+    # Left-side info
+    info_rows_left = [
+        ("Customer Name:", style.customer.customer_name if style.customer else ""),
+        ("Season:", style.season or ""),
+        ("Style:", style.style_no or ""),
+        ("Style Description:", "\n".join(d.style_description for d in style.descriptions.all())),
+        ("Program:", style.program or ""),
+    ]
+
+    info_rows_middle = [
+        ("Production Line:", style.production_line or ""),
+        ("Order Qty:", f"{style.order_qty} pcs" if style.order_qty else ""),
+        ("APM:", style.apm or ""),
+    ]
+    
+    # Right-side info (Production / Technician side)
+    info_rows_right = [
+        ("Technician:", style.technician or ""),
+        ("QC:", style.qc or ""),
+        ("QA:", style.qa or ""),
+        ("TQS:", style.tqs or ""),
+    ]
+
+    # Start rows at same height as original
+    start_row = 4
+    left_row = start_row
+    middle_row = start_row
+    right_row = start_row
+
+    # Write left info (cols A–B)
+    for label, value in info_rows_left:
+        ws[f"A{left_row}"] = label
+        ws[f"A{left_row}"].font = bold
+        ws[f"A{left_row}"].alignment = left
+        ws[f"B{left_row}"] = value
+        ws[f"B{left_row}"].alignment = left
+        left_row += 1
+
+    for label, value in info_rows_middle:
+        ws[f"C{middle_row}"] = label
+        ws[f"C{middle_row}"].font = bold
+        ws[f"C{middle_row}"].alignment = left
+        ws[f"D{middle_row}"] = value
+        ws[f"D{middle_row}"].alignment = left
+        middle_row += 1
+    
+    # Write right info (cols D–E)
+    for label, value in info_rows_right:
+        ws[f"E{right_row}"] = label
+        ws[f"E{right_row}"].font = bold
+        ws[f"E{right_row}"].alignment = left
+        ws[f"F{right_row}"] = value
+        ws[f"F{right_row}"].alignment = left
+        right_row += 1
+
+    # Leave a blank line
+    row = max(left_row, middle_row, right_row) + 1
+
+    # ---- Table Header ----
+    ws["A" + str(row)] = "Description"
+    ws["B" + str(row)] = "Responsible Person"
+    ws["C" + str(row)] = "Process"
+
+    # Merge D–F for "Comments"
+    ws.merge_cells(start_row=row, start_column=4, end_row=row, end_column=6)
+    ws["D" + str(row)] = "Comments"
+
+    for col in range(1, 7):
+        cell = ws.cell(row=row, column=col)
+        cell.font = bold
+        cell.alignment = center
+        cell.border = thin_border
+
+    row += 1
+    
+    # ---- Sample table data (use your actual comments here) ----
+    sections = [
+        ("Material Concerns (SMS)", "W/House/QC/CS",
+            ["Fabric issue", "Trims issue", "Bonding / Seam Tape parameter"]),
+        ("Logo Application", "QC/Prdn",
+            ["Printing issue", "Embroidery issue", "Heat transfer issue"]),
+        ("Construction", "APM/QC/TECH", [""]),
+        ("Stitching and Sewing (Special tools, M/C, Needle etc.)", "APM/QC/TECH/Maint", [""]),
+        ("SMS Notes & Risk Analysis", "QC & QA/CS", [""]),
+        ("Size Set Evaluation & Comments", "QC", [""]), 
+        ("PP meeting Special attention (SMS review, size set review, Pattern review, risk point review & Customer comments review)", 
+            "W/House/QC/CS/APM/TECH/Mechanic/QA/PATTERN/CUTTING", [""]), 
+        ("Bulk Production", "APM/QC/TECH", 
+            ["Line layout", "Machine Layout", "Special Tools(Gage, Guide, Folder)", "KPM, KPI & Self Inspection"]), 
+        ("1st Output", "Individual Team", ["QC comments", "QA comments", "TQS comments"]),
+        ("Factory Inline issue", "APM & QC", ["Factory Feedback & Solution"]),
+        ("Customer Comments", "QA", ["Inline comments", "Final Comments"]), 
+        ("Others", "", [""])
+    ]
+
+    for section_name, responsible, processes in sections:
+        first_row = row
+        for process in processes:
+            ws.cell(row=row, column=3).value = process
+            ws.cell(row=row, column=3).alignment = left
+            ws.cell(row=row, column=3).border = thin_border
+
+            # Comments spanning D–F
+            ws.merge_cells(start_row=row, start_column=4, end_row=row, end_column=6)
+            comment_obj = Comment.objects.filter(style=style, process=process).first()
+            ws.cell(row=row, column=4).value = comment_obj.comment_text if comment_obj else ""
+            ws.cell(row=row, column=4).alignment = left
+
+            # Apply border to merged area
+            for col in range(4, 7):
+                ws.cell(row=row, column=col).border = thin_border
+
+            row += 1
+
+
+        # ---- Set custom row heights for specific sections ----
+        if section_name == "Stitching and Sewing (Special tools, M/C, Needle etc.)":
+            ws.row_dimensions[first_row].height = 53
+        elif section_name == "Size Set Evaluation & Comments":
+            ws.row_dimensions[first_row].height = 33
+        elif section_name.startswith("PP meeting Special attention"):
+            ws.row_dimensions[first_row].height = 100
+
+        # Merge and fill section name & responsible person
+        ws.merge_cells(start_row=first_row, start_column=1, end_row=row - 1, end_column=1)
+        ws.cell(row=first_row, column=1).value = section_name
+        ws.cell(row=first_row, column=1).alignment = center
+        set_border(ws, first_row, 1, row - 1, 1, thin_border)
+
+        ws.merge_cells(start_row=first_row, start_column=2, end_row=row - 1, end_column=2)
+        ws.cell(row=first_row, column=2).value = responsible
+        ws.cell(row=first_row, column=2).alignment = center
+        set_border(ws, first_row, 2, row - 1, 2, thin_border)
+
+    # ---- Return Excel ----
     response = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    filename = f"{style.customer.customer_name}_{style.style_no}.xlsx"
+    filename = f"Style_{style.style_no}_Summary.xlsx"
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
-
     wb.save(response)
     return response

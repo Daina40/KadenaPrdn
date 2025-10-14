@@ -5,7 +5,8 @@ urlpatterns = [
     path('style_add/', views.style_info_add, name='style_info_add'),
     path('', views.add_style_overview, name='add_style_overview'),
     path('delete_add_style_overview/<int:id>/', views.delete_add_style_overview, name='delete_add_style_overview'),
-    
+    path('edit_add_style_overview/<int:id>/', views.edit_add_style_overview, name='edit_add_style_overview'),
+
     path('style/<int:style_id>/', views.style_detail, name='style_detail'),
     path('style/<int:style_id>/save_comments/', views.save_comments, name='save_comments'),
     path('style/<int:style_id>/delete_comment/', views.delete_comment, name='delete_comment'),

@@ -6,6 +6,14 @@
     <h1 class="text-2xl text-green-500 font-bold mb-6 text-center">
         Add Style Overview
     </h1>
+    <div class="flex justify-start my-2 mb-4">
+        {% if not read_only %}
+            <a href="{% url "style_info_add" %}" class="bg-blue-800 text-white px-2 py-1 text-[14px] rounded font-bold hover:bg-blue-900">
+                Customer Add
+            </a>
+        {% endif %}
+    </div>
+    
     <div class="overflow-x-auto">
         <table class="min-w-full table-auto border border-black text-sm w-full mb-[100px]">
             <thead class="bg-gray-300">
@@ -76,11 +84,12 @@
                                     <td class="border p-1">{{ row.tqs }}</td>
                                     <td class="border p-1">
                                         <div class="flex justify-between">
-                                            <a href="#" class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
+                                            <a href="{% url 'edit_add_style_overview' row.id %}" 
+                                                class="bg-yellow-500 text-white px-2 py-1 mr-1 rounded">
                                                 <i class="fa-regular fa-pen-to-square"></i>
                                             </a>
                                             <a href="{% url 'delete_add_style_overview' row.id %}" class="bg-red-600 text-white px-2 py-1 mr-1 rounded"
-                                            onclick="return confirm('Are you sure you want to delete this entry?');">
+                                                onclick="return confirm('Are you sure you want to delete this entry?');">
                                                 <i class="fa-solid fa-trash-can"></i>
                                             </a>
                                         </div>
