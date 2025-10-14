@@ -721,7 +721,33 @@ def download_style_excel(request, style_id):
         ws.cell(row=first_row, column=2).value = responsible
         ws.cell(row=first_row, column=2).alignment = center
         set_border(ws, first_row, 2, row - 1, 2, thin_border)
+    
+    # Leave 4 empty rows
+    row += 4
+    footer_roles = ["APM", "QC", "TECHNICIAN", "QA", "QC MANAGER", "PM"]
 
+    # Set row heights
+    ws.row_dimensions[row].height = 20   # row for lines
+    ws.row_dimensions[row+1].height = 20 # row for role labels
+
+    # Set column widths to make lines wide enough
+    for col_index in range(1, len(footer_roles) + 1):
+        ws.column_dimensions[get_column_letter(col_index)].width = 18
+
+    # Row for signature lines (underscores)
+    for col_index in range(1, len(footer_roles) + 1):
+        cell = ws.cell(row=row, column=col_index)
+        cell.value = "_______"  # adjust underscores length for width
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.font = Font(bold=True)
+
+    # Row for role labels
+    for col_index, role in enumerate(footer_roles, start=1):
+        cell = ws.cell(row=row+1, column=col_index)
+        cell.value = role
+        cell.alignment = Alignment(horizontal="center", vertical="top")
+        cell.font = Font(bold=True)
+        
     # ---- Return Excel ----
     response = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
