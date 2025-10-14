@@ -596,7 +596,7 @@ def download_style_excel(request, style_id):
     ws["F3"] = style.created_at.strftime("%d-%b-%Y") if style.created_at else ""
     ws["E3"].font = bold
     ws["E3"].alignment = right
-    ws["F3"].alignment = center
+    ws["F3"].alignment = left
 
     # ---- Information Section (left and right grouping) ----
     # Left-side info
