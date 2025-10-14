@@ -547,6 +547,17 @@ def download_style_excel(request, style_id):
         StyleInfo.objects.prefetch_related("descriptions__comments", "customer"),
         id=style_id
     )
+    
+    descriptions = style.descriptions.all()
+
+    # Build comments_dict like in read-only page
+    comments_dict = {
+        desc.id: {
+            c.process.strip(): c.comment_text
+            for c in style.comments.filter(description=desc)
+        }
+        for desc in descriptions
+    }
 
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -566,7 +577,7 @@ def download_style_excel(request, style_id):
 
     # ---- Sheet column widths ----
     ws.column_dimensions["A"].width = 22
-    ws.column_dimensions["B"].width = 25
+    ws.column_dimensions["B"].width = 30
     ws.column_dimensions["C"].width = 20
     ws.column_dimensions["D"].width = 20
     ws.column_dimensions["E"].width = 20
@@ -689,11 +700,17 @@ def download_style_excel(request, style_id):
             ws.cell(row=row, column=3).value = process
             ws.cell(row=row, column=3).alignment = left
             ws.cell(row=row, column=3).border = thin_border
+            
+            # Get comment from read-only page data
+            comment_text = ""
+            for desc_id, processes_dict in comments_dict.items():
+                if process in processes_dict:
+                    comment_text = processes_dict[process]
+                    break
 
             # Comments spanning D–F
             ws.merge_cells(start_row=row, start_column=4, end_row=row, end_column=6)
-            comment_obj = Comment.objects.filter(style=style, process=process).first()
-            ws.cell(row=row, column=4).value = comment_obj.comment_text if comment_obj else ""
+            ws.cell(row=row, column=4).value = comment_text
             ws.cell(row=row, column=4).alignment = left
 
             # Apply border to merged area
